@@ -1,6 +1,12 @@
 package com.keys.cafe.keyboard.render
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -26,10 +32,10 @@ import kotlinx.coroutines.delay
 
 /**
  * FIXED: KeyboardRenderer
+ * - Fixed imports (added animateColorAsState)
  * - Fixed color flicker (removed System.currentTimeMillis())
  * - Added shift state visual indicator
  * - Fixed key sizing for landscape
- * - Better touch handling
  */
 @Composable
 fun KeyboardRenderer(
@@ -49,7 +55,7 @@ fun KeyboardRenderer(
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
-    // FIXED: Handle landscape mode - limit keyboard height
+    // Handle landscape mode - limit keyboard height
     val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
     val maxKeyboardHeight = if (isLandscape) (screenHeight * 0.6f) else (screenHeight * 0.45f)
 
@@ -128,7 +134,7 @@ private fun KeyButton(
     var isLongPressed by remember { mutableStateOf(false) }
     var showGlow by remember { mutableStateOf(false) }
 
-    // FIXED: Proper animation states
+    // Animation states
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.92f else 1.0f,
         animationSpec = tween(
@@ -157,17 +163,6 @@ private fun KeyButton(
             durationMillis = if (settings.animationEnabled) 100 else 0
         ),
         label = "pressColor"
-    )
-
-    // FIXED: Multi-state color for fire effect (using animation)
-    val fireColor by rememberInfiniteTransition(label = "fire").animateColor(
-        initialValue = Color.White,
-        targetValue = Color(0xFFFF6400),
-        animationSpec = infiniteRepeatable(
-            animation = tween(300, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "fireColor"
     )
 
     val glowColor = when (key.glowColorOrDefault) {
