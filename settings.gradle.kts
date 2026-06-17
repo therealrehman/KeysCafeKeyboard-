@@ -13,4 +13,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "KeysCafeKeyboard"
-include ':app'
+include(":app")
