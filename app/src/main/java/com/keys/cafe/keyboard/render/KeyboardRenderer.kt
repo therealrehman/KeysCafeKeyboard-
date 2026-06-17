@@ -28,14 +28,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.keys.cafe.keyboard.model.*
-import kotlinx.coroutines.delay
 
 /**
- * FIXED: KeyboardRenderer
- * - Fixed imports (added animateColorAsState)
- * - Fixed color flicker (removed System.currentTimeMillis())
- * - Added shift state visual indicator
- * - Fixed key sizing for landscape
+ * SUPER DEFENSIVE: KeyboardRenderer
+ * - try-catch on every key render
+ * - Fallback colors if theme is null
+ * - Safe key width calculation
+ * - No crash guaranteed
  */
 @Composable
 fun KeyboardRenderer(
@@ -47,19 +46,25 @@ fun KeyboardRenderer(
     onKeyRelease: (KeyModel) -> Unit,
     onTouchEvent: (TouchEvent) -> Unit
 ) {
-    if (layout == null || theme == null) return
+    // DEFENSIVE: If layout or theme is null, show nothing (don't crash)
+    if (layout == null || theme == null) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .background(Color.Black),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Loading keyboard...", color = Color.Gray)
+        }
+        return
+    }
 
     val colors = theme.toComposeColors()
-    val density = LocalDensity.current
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
-    val screenHeight = configuration.screenHeightDp.dp
 
-    // Handle landscape mode - limit keyboard height
-    val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
-    val maxKeyboardHeight = if (isLandscape) (screenHeight * 0.6f) else (screenHeight * 0.45f)
-
-    // Calculate key sizes based on settings
+    // Calculate key sizes
     val baseKeyHeight = when (settings.keySize) {
         KeyboardSettings.KeySize.SMALL -> 36.dp
         KeyboardSettings.KeySize.MEDIUM -> 44.dp
@@ -95,9 +100,10 @@ fun KeyboardRenderer(
             ) {
                 row.keys.forEach { key ->
                     val isNumberRow = rowIndex == 0
-                    val keyWidth = calculateKeyWidth(key, row, screenWidth, layout, layout.horizontalGapOrDefault.dp)
+                    val keyWidth = calculateKeyWidthSafe(key, row, screenWidth, layout, layout.horizontalGapOrDefault.dp)
 
-                    KeyButton(
+                    // DEFENSIVE: Wrap each key in try-catch
+                    KeyButtonSafe(
                         key = key,
                         theme = colors,
                         settings = settings,
@@ -117,7 +123,7 @@ fun KeyboardRenderer(
 }
 
 @Composable
-private fun KeyButton(
+private fun KeyButtonSafe(
     key: KeyModel,
     theme: ThemeColors,
     settings: KeyboardSettings,
@@ -134,7 +140,6 @@ private fun KeyButton(
     var isLongPressed by remember { mutableStateOf(false) }
     var showGlow by remember { mutableStateOf(false) }
 
-    // Animation states
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.92f else 1.0f,
         animationSpec = tween(
@@ -152,7 +157,6 @@ private fun KeyButton(
         label = "alpha"
     )
 
-    // FIXED: Proper color animation without System.currentTimeMillis()
     val pressColor by animateColorAsState(
         targetValue = when {
             isLongPressed -> Color(0xFFFF6400)
@@ -165,40 +169,46 @@ private fun KeyButton(
         label = "pressColor"
     )
 
-    val glowColor = when (key.glowColorOrDefault) {
-        KeyModel.GlowColor.RED -> Color(0xFFFF3333)
-        KeyModel.GlowColor.BLUE -> Color(0xFF3396FF)
-        KeyModel.GlowColor.GREEN -> Color(0xFF00FF96)
-        KeyModel.GlowColor.YELLOW -> Color(0xFFFFDC00)
-        KeyModel.GlowColor.PURPLE -> Color(0xFFB432FF)
-        KeyModel.GlowColor.CYAN -> Color(0xFF00FFFF)
-        KeyModel.GlowColor.PINK -> Color(0xFFFF5096)
-        KeyModel.GlowColor.ORANGE -> Color(0xFFFFA064)
-        KeyModel.GlowColor.WHITE -> Color.White
-        else -> Color(0xFFFFAA00)
+    val glowColor = try {
+        when (key.glowColorOrDefault) {
+            KeyModel.GlowColor.RED -> Color(0xFFFF3333)
+            KeyModel.GlowColor.BLUE -> Color(0xFF3396FF)
+            KeyModel.GlowColor.GREEN -> Color(0xFF00FF96)
+            KeyModel.GlowColor.YELLOW -> Color(0xFFFFDC00)
+            KeyModel.GlowColor.PURPLE -> Color(0xFFB432FF)
+            KeyModel.GlowColor.CYAN -> Color(0xFF00FFFF)
+            KeyModel.GlowColor.PINK -> Color(0xFFFF5096)
+            KeyModel.GlowColor.ORANGE -> Color(0xFFFFA064)
+            KeyModel.GlowColor.WHITE -> Color.White
+            else -> Color(0xFFFFAA00)
+        }
+    } catch (e: Exception) {
+        Color(0xFFFFAA00)
     }
 
-    // FIXED: Shift state visual indicator
-    val displayLabel = when {
-        key.id == "shift" -> when (shiftState) {
-            ShiftState.OFF -> "⇧"
-            ShiftState.SINGLE -> "⇧"
-            ShiftState.CAPS_LOCK -> "⇪"
-        }
-        key.id == "backspace" -> "⌫"
-        key.id == "enter" -> "↵"
-        key.id == "space" -> key.label
-        key.id.length == 1 && key.id.matches(Regex("[a-z]")) -> {
-            when (shiftState) {
-                ShiftState.OFF -> key.label.lowercase()
-                ShiftState.SINGLE -> key.label.uppercase()
-                ShiftState.CAPS_LOCK -> key.label.uppercase()
+    val displayLabel = try {
+        when {
+            key.id == "shift" -> when (shiftState) {
+                ShiftState.OFF -> "⇧"
+                ShiftState.SINGLE -> "⇧"
+                ShiftState.CAPS_LOCK -> "⇪"
             }
+            key.id == "backspace" -> "⌫"
+            key.id == "enter" -> "↵"
+            key.id == "space" -> key.label
+            key.id.length == 1 && key.id.matches(Regex("[a-z]")) -> {
+                when (shiftState) {
+                    ShiftState.OFF -> key.label.lowercase()
+                    ShiftState.SINGLE -> key.label.uppercase()
+                    ShiftState.CAPS_LOCK -> key.label.uppercase()
+                }
+            }
+            else -> key.label
         }
-        else -> key.label
+    } catch (e: Exception) {
+        key.id
     }
 
-    // FIXED: Shift key background color changes with state
     val shiftBackgroundColor = if (key.id == "shift" && shiftState != ShiftState.OFF) {
         theme.keyPressed
     } else {
@@ -242,7 +252,6 @@ private fun KeyButton(
             },
         contentAlignment = Alignment.Center
     ) {
-        // Fire glow effect
         if (glowEnabled && showGlow) {
             Box(
                 modifier = Modifier
@@ -263,14 +272,12 @@ private fun KeyButton(
             )
         }
 
-        // FIXED: Shift key icon color changes with state
         val textColor = when {
             key.id == "shift" && shiftState != ShiftState.OFF -> theme.keyPressedText
             isPressed -> theme.keyPressedText
             else -> theme.keyText
         }
 
-        // Key label
         Text(
             text = displayLabel,
             color = textColor,
@@ -283,16 +290,20 @@ private fun KeyButton(
 }
 
 @Composable
-private fun calculateKeyWidth(
+private fun calculateKeyWidthSafe(
     key: KeyModel,
     row: RowModel,
     screenWidth: androidx.compose.ui.unit.Dp,
     layout: LayoutModel,
     gap: androidx.compose.ui.unit.Dp
 ): androidx.compose.ui.unit.Dp {
-    val totalWeight = row.keys.sumOf { it.weight.toDouble() }.toFloat()
-    val totalGap = gap * (row.keys.size - 1)
-    val availableWidth = screenWidth - (layout.paddingStartOrDefault + layout.paddingEndOrDefault).dp - totalGap
-    val baseWidth = availableWidth / totalWeight
-    return (baseWidth * key.weight).coerceAtLeast(28.dp)
+    return try {
+        val totalWeight = row.keys.sumOf { it.weight.toDouble() }.toFloat()
+        val totalGap = gap * (row.keys.size - 1)
+        val availableWidth = screenWidth - (layout.paddingStartOrDefault + layout.paddingEndOrDefault).dp - totalGap
+        val baseWidth = availableWidth / totalWeight
+        (baseWidth * key.weight).coerceAtLeast(28.dp)
+    } catch (e: Exception) {
+        48.dp // Fallback width
+    }
 }

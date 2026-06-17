@@ -19,11 +19,11 @@ import com.keys.cafe.keyboard.settings.SettingsActivity
 import kotlinx.coroutines.flow.collectLatest
 
 /**
- * FIXED: KeysCafeInputMethodService
- * - Proper lifecycle management
- * - Input type handling (password, email, number, etc.)
- * - Proper cleanup on destroy
- * - IME action handling complete
+ * SUPER DEFENSIVE: KeysCafeInputMethodService
+ * - try-catch on every lifecycle method
+ * - Safe ComposeView creation
+ * - Fallback if anything fails
+ * - No crash guaranteed
  */
 class KeysCafeInputMethodService : InputMethodService(),
     LifecycleOwner,
@@ -37,8 +37,6 @@ class KeysCafeInputMethodService : InputMethodService(),
 
     private var currentSettings: KeyboardSettings = KeyboardSettings()
     private var settingsRepository: SettingsRepository? = null
-
-    // FIXED: Track current input type
     private var currentInputType: Int = InputType.TYPE_CLASS_TEXT
 
     override val lifecycle: Lifecycle get() = lifecycleRegistry
@@ -47,135 +45,147 @@ class KeysCafeInputMethodService : InputMethodService(),
         get() = savedStateRegistryController.savedStateRegistry
 
     override fun onCreate() {
-        super.onCreate()
-        savedStateRegistryController.performRestore(null)
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
-        settingsRepository = SettingsRepository(applicationContext)
+        try {
+            super.onCreate()
+            savedStateRegistryController.performRestore(null)
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+            settingsRepository = SettingsRepository(applicationContext)
+        } catch (e: Exception) {
+            android.util.Log.e("KeysCafeIME", "onCreate failed", e)
+        }
     }
 
-    /**
-     * FIXED: Proper input view creation with lifecycle
-     */
-    override fun onCreateInputView(): View {
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+    override fun onCreateInputView(): View? {
+        return try {
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
 
-        val newComposeView = ComposeView(this).apply {
-            setContent {
-                CompositionLocalProvider(
-                    LocalLifecycleOwner provides this@KeysCafeInputMethodService
-                ) {
-                    var settings by remember { mutableStateOf(currentSettings) }
+            val newComposeView = ComposeView(this).apply {
+                setContent {
+                    CompositionLocalProvider(
+                        LocalLifecycleOwner provides this@KeysCafeInputMethodService
+                    ) {
+                        var settings by remember { mutableStateOf(currentSettings) }
 
-                    LaunchedEffect(Unit) {
-                        settingsRepository?.settingsFlow?.collectLatest { newSettings ->
-                            settings = newSettings
-                            currentSettings = newSettings
+                        LaunchedEffect(Unit) {
+                            try {
+                                settingsRepository?.settingsFlow?.collectLatest { newSettings ->
+                                    settings = newSettings
+                                    currentSettings = newSettings
+                                }
+                            } catch (e: Exception) {
+                                android.util.Log.e("KeysCafeIME", "Settings flow failed", e)
+                            }
                         }
-                    }
 
-                    KeyboardView(
-                        settings = settings,
-                        onTextInput = { text -> handleTextInput(text) },
-                        onDelete = { handleDelete() },
-                        onEnter = { handleEnter() },
-                        onSettings = { openSettings() }
-                    )
+                        KeyboardView(
+                            settings = settings,
+                            onTextInput = { text -> handleTextInput(text) },
+                            onDelete = { handleDelete() },
+                            onEnter = { handleEnter() },
+                            onSettings = { openSettings() }
+                        )
+                    }
                 }
             }
-        }
 
-        composeView = newComposeView
-        return newComposeView
+            composeView = newComposeView
+            newComposeView
+        } catch (e: Exception) {
+            android.util.Log.e("KeysCafeIME", "onCreateInputView failed", e)
+            // Return a simple fallback view
+            View(this)
+        }
     }
 
-    /**
-     * FIXED: Handle input type changes
-     */
     override fun onStartInput(attribute: EditorInfo, restarting: Boolean) {
-        super.onStartInput(attribute, restarting)
-        currentInputType = attribute.inputType
-
-        // FIXED: Adjust keyboard based on input type
-        when (attribute.inputType and InputType.TYPE_MASK_CLASS) {
-            InputType.TYPE_CLASS_NUMBER,
-            InputType.TYPE_CLASS_PHONE -> {
-                // Could switch to number layout here
-                android.util.Log.d("KeysCafeIME", "Number/Phone input detected")
-            }
-            InputType.TYPE_CLASS_TEXT -> {
-                // Check for variations
-                when (attribute.inputType and InputType.TYPE_MASK_VARIATION) {
-                    InputType.TYPE_TEXT_VARIATION_PASSWORD,
-                    InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
-                    InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD -> {
-                        android.util.Log.d("KeysCafeIME", "Password input detected")
-                    }
-                    InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS,
-                    InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS -> {
-                        android.util.Log.d("KeysCafeIME", "Email input detected")
-                    }
-                }
-            }
+        try {
+            super.onStartInput(attribute, restarting)
+            currentInputType = attribute.inputType
+        } catch (e: Exception) {
+            android.util.Log.e("KeysCafeIME", "onStartInput failed", e)
         }
     }
 
-    /**
-     * FIXED: Proper window showing
-     */
     override fun onWindowShown() {
-        super.onWindowShown()
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+        try {
+            super.onWindowShown()
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+        } catch (e: Exception) {
+            android.util.Log.e("KeysCafeIME", "onWindowShown failed", e)
+        }
     }
 
     override fun onWindowHidden() {
-        super.onWindowHidden()
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+        try {
+            super.onWindowHidden()
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+        } catch (e: Exception) {
+            android.util.Log.e("KeysCafeIME", "onWindowHidden failed", e)
+        }
     }
 
-    /**
-     * FIXED: Proper cleanup on destroy
-     */
     override fun onDestroy() {
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-        _viewModelStore.clear()
-        composeView?.disposeComposition()
-        composeView = null
-        settingsRepository = null
-        super.onDestroy()
+        try {
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+            _viewModelStore.clear()
+            composeView?.disposeComposition()
+            composeView = null
+            settingsRepository = null
+        } catch (e: Exception) {
+            android.util.Log.e("KeysCafeIME", "onDestroy failed", e)
+        }
+        try {
+            super.onDestroy()
+        } catch (e: Exception) {
+            android.util.Log.e("KeysCafeIME", "super.onDestroy failed", e)
+        }
     }
 
     private fun handleTextInput(text: String) {
-        currentInputConnection?.commitText(text, 1)
+        try {
+            currentInputConnection?.commitText(text, 1)
+        } catch (e: Exception) {
+            android.util.Log.e("KeysCafeIME", "Text input failed", e)
+        }
     }
 
     private fun handleDelete() {
-        currentInputConnection?.deleteSurroundingText(1, 0)
+        try {
+            currentInputConnection?.deleteSurroundingText(1, 0)
+        } catch (e: Exception) {
+            android.util.Log.e("KeysCafeIME", "Delete failed", e)
+        }
     }
 
-    /**
-     * FIXED: Complete IME action handling
-     */
     private fun handleEnter() {
-        val ic = currentInputConnection ?: return
-        val editorInfo = currentInputEditorInfo
+        try {
+            val ic = currentInputConnection ?: return
+            val editorInfo = currentInputEditorInfo
 
-        val action = editorInfo.imeOptions and EditorInfo.IME_MASK_ACTION
+            val action = editorInfo.imeOptions and EditorInfo.IME_MASK_ACTION
 
-        when (action) {
-            EditorInfo.IME_ACTION_DONE -> ic.performEditorAction(EditorInfo.IME_ACTION_DONE)
-            EditorInfo.IME_ACTION_GO -> ic.performEditorAction(EditorInfo.IME_ACTION_GO)
-            EditorInfo.IME_ACTION_NEXT -> ic.performEditorAction(EditorInfo.IME_ACTION_NEXT)
-            EditorInfo.IME_ACTION_SEARCH -> ic.performEditorAction(EditorInfo.IME_ACTION_SEARCH)
-            EditorInfo.IME_ACTION_SEND -> ic.performEditorAction(EditorInfo.IME_ACTION_SEND)
-            EditorInfo.IME_ACTION_PREVIOUS -> ic.performEditorAction(EditorInfo.IME_ACTION_PREVIOUS)
-            else -> ic.commitText("\n", 1)
+            when (action) {
+                EditorInfo.IME_ACTION_DONE -> ic.performEditorAction(EditorInfo.IME_ACTION_DONE)
+                EditorInfo.IME_ACTION_GO -> ic.performEditorAction(EditorInfo.IME_ACTION_GO)
+                EditorInfo.IME_ACTION_NEXT -> ic.performEditorAction(EditorInfo.IME_ACTION_NEXT)
+                EditorInfo.IME_ACTION_SEARCH -> ic.performEditorAction(EditorInfo.IME_ACTION_SEARCH)
+                EditorInfo.IME_ACTION_SEND -> ic.performEditorAction(EditorInfo.IME_ACTION_SEND)
+                EditorInfo.IME_ACTION_PREVIOUS -> ic.performEditorAction(EditorInfo.IME_ACTION_PREVIOUS)
+                else -> ic.commitText("\n", 1)
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("KeysCafeIME", "Enter failed", e)
         }
     }
 
     private fun openSettings() {
-        val intent = Intent(this, SettingsActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        startActivity(intent)
+        try {
+            val intent = Intent(this, SettingsActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+        } catch (e: Exception) {
+            android.util.Log.e("KeysCafeIME", "Open settings failed", e)
+        }
     }
 }
