@@ -13,7 +13,6 @@ import com.keys.cafe.keyboard.layout.LayoutManager
 import com.keys.cafe.keyboard.model.*
 import com.keys.cafe.keyboard.sound.SoundEngine
 import com.keys.cafe.keyboard.theme.ThemeManager
-import com.keys.cafe.keyboard.touch.TouchEngine
 import kotlinx.coroutines.launch
 
 /**
@@ -22,7 +21,11 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun KeyboardView(
-    settings: KeyboardSettings = remember { KeyboardSettings() }
+    settings: KeyboardSettings = remember { KeyboardSettings() },
+    onTextInput: (String) -> Unit = {},
+    onDelete: () -> Unit = {},
+    onEnter: () -> Unit = {},
+    onSettings: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -30,7 +33,6 @@ fun KeyboardView(
     // Managers
     val layoutManager = remember { LayoutManager.getInstance(context) }
     val themeManager = remember { ThemeManager.getInstance(context) }
-    val touchEngine = remember { TouchEngine(context) }
     val soundEngine = remember { SoundEngine(context) }
     val hapticEngine = remember { HapticEngine(context) }
 
@@ -38,7 +40,6 @@ fun KeyboardView(
     var currentLayout by remember { mutableStateOf<LayoutModel?>(null) }
     var currentTheme by remember { mutableStateOf<ThemeModel?>(null) }
     var shiftState by remember { mutableStateOf(ShiftState.OFF) }
-    var keyboardMode by remember { mutableStateOf(LayoutModel.LayoutType.ALPHABET) }
 
     // Initialize
     LaunchedEffect(Unit) {
@@ -52,59 +53,65 @@ fun KeyboardView(
     LaunchedEffect(settings) {
         soundEngine.updateSettings(settings)
         hapticEngine.updateSettings(settings)
-        touchEngine.longPressDelay = settings.longPressDelay
+    }
+
+    // Resolve a key tap into real text-input / control actions and forward to the IME.
+    fun dispatchKey(key: KeyModel) {
+        when (key.id) {
+            "shift" -> {
+                shiftState = when (shiftState) {
+                    ShiftState.OFF -> ShiftState.SINGLE
+                    ShiftState.SINGLE -> ShiftState.CAPS_LOCK
+                    ShiftState.CAPS_LOCK -> ShiftState.OFF
+                }
+            }
+            "backspace" -> onDelete()
+            "enter" -> onEnter()
+            "space" -> onTextInput(" ")
+            "symbols" -> {
+                scope.launch {
+                    if (layoutManager.switchLayout("symbols")) {
+                        currentLayout = layoutManager.getCurrentLayout()
+                    }
+                }
+            }
+            "settings" -> onSettings()
+            else -> {
+                val isLetter = key.id.length == 1 && key.id.matches(Regex("[a-zA-Z]"))
+                val output = if (isLetter && shiftState != ShiftState.OFF) {
+                    key.output.uppercase()
+                } else {
+                    key.output
+                }
+                onTextInput(output)
+                if (shiftState == ShiftState.SINGLE) {
+                    shiftState = ShiftState.OFF
+                }
+            }
+        }
     }
 
     // Touch event handler
     val handleTouchEvent: (TouchEvent) -> Unit = { event ->
         when (event) {
-            is TouchEvent.SingleTap -> handleKeyInput(event.key, shiftState, soundEngine, hapticEngine) { newShift ->
-                shiftState = newShift
-            }
+            is TouchEvent.SingleTap -> dispatchKey(event.key)
             is TouchEvent.LongPress -> {
-                // Handle long press (popup characters, etc.)
                 if (event.key.supportsLongPress) {
-                    // Show popup
+                    // Show popup characters (future enhancement)
                 }
             }
-            is TouchEvent.SwipeUp -> {
-                // Handle swipe gestures
-            }
-            is TouchEvent.SwipeDown -> {
-                // Dismiss keyboard
-            }
-            else -> {} // Handle other events
+            is TouchEvent.SwipeDown -> onSettings()
+            else -> {} // Other gestures reserved for future use
         }
     }
 
-    // Key press handler
+    // Key press / release handlers (sound + haptic feedback only; text logic lives in dispatchKey)
     val handleKeyPress: (KeyModel) -> Unit = { key ->
         soundEngine.playKeySound(key)
         hapticEngine.performHaptic(key)
     }
 
-    // Key release handler
-    val handleKeyRelease: (KeyModel) -> Unit = { key ->
-        // Cleanup if needed
-    }
-
-    // Layout switcher
-    val switchLayout: (String) -> Unit = { layoutId ->
-        scope.launch {
-            if (layoutManager.switchLayout(layoutId)) {
-                currentLayout = layoutManager.getCurrentLayout()
-            }
-        }
-    }
-
-    // Theme switcher
-    val switchTheme: (String) -> Unit = { themeId ->
-        scope.launch {
-            if (themeManager.switchTheme(themeId)) {
-                currentTheme = themeManager.getCurrentTheme()
-            }
-        }
-    }
+    val handleKeyRelease: (KeyModel) -> Unit = { /* no-op for now */ }
 
     Box(
         modifier = Modifier
@@ -131,53 +138,6 @@ fun KeyboardView(
                 onKeyRelease = handleKeyRelease,
                 onTouchEvent = handleTouchEvent
             )
-        }
-    }
-}
-
-/**
- * Handle key input logic.
- */
-private fun handleKeyInput(
-    key: KeyModel,
-    currentShift: ShiftState,
-    soundEngine: SoundEngine,
-    hapticEngine: HapticEngine,
-    onShiftChange: (ShiftState) -> Unit
-) {
-    soundEngine.playKeySound(key)
-    hapticEngine.performHaptic(key)
-
-    when (key.id) {
-        "shift" -> {
-            val newShift = when (currentShift) {
-                ShiftState.OFF -> ShiftState.SINGLE
-                ShiftState.SINGLE -> ShiftState.CAPS_LOCK
-                ShiftState.CAPS_LOCK -> ShiftState.OFF
-            }
-            onShiftChange(newShift)
-        }
-        "backspace" -> {
-            // Handle backspace
-        }
-        "enter" -> {
-            // Handle enter
-        }
-        "space" -> {
-            // Handle space
-        }
-        "symbols" -> {
-            // Switch to symbols
-        }
-        else -> {
-            // Insert character
-            val char = when {
-                currentShift != ShiftState.OFF && key.id.length == 1 && key.id.matches(Regex("[a-z]")) -> {
-                    key.id.uppercase()
-                }
-                else -> key.output
-            }
-            // Send to input connection
         }
     }
 }

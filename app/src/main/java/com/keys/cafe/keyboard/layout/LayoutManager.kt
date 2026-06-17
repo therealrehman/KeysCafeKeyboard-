@@ -11,7 +11,7 @@ import java.io.IOException
 
 /**
  * Manages keyboard layouts: loading, switching, caching, and rendering preparation.
- * 
+ *
  * Responsibilities:
  * - Load layout from JSON files
  * - Switch layout dynamically without restart
@@ -37,6 +37,10 @@ class LayoutManager(private val context: Context) {
             return instance ?: synchronized(this) {
                 instance ?: LayoutManager(context.applicationContext).also { instance = it }
             }
+        }
+
+        private fun clearInstance() {
+            instance = null
         }
     }
 
@@ -148,6 +152,6 @@ class LayoutManager(private val context: Context) {
      */
     fun destroy() {
         clearCache()
-        instance = null
+        clearInstance()
     }
 }

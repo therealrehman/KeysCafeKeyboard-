@@ -28,6 +28,10 @@ class ThemeManager(private val context: Context) {
                 instance ?: ThemeManager(context.applicationContext).also { instance = it }
             }
         }
+
+        private fun clearInstance() {
+            instance = null
+        }
     }
 
     suspend fun initialize() = withContext(Dispatchers.IO) {
@@ -71,6 +75,6 @@ class ThemeManager(private val context: Context) {
 
     fun destroy() {
         clearCache()
-        instance = null
+        clearInstance()
     }
 }

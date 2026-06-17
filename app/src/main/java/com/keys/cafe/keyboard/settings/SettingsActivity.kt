@@ -3,6 +3,7 @@ package com.keys.cafe.keyboard.settings
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,12 +13,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import com.keys.cafe.keyboard.data.SettingsRepository
 import com.keys.cafe.keyboard.model.KeyboardSettings
-import com.keys.cafe.keyboard.theme.ThemeManager
-import com.keys.cafe.keyboard.layout.LayoutManager
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -152,7 +152,7 @@ fun LayoutSettings(
                 } else null
             ) {
                 ListItem(
-                    headlineContent = { 
+                    headlineContent = {
                         Text(
                             layoutNames[layoutId] ?: layoutId,
                             color = if (isSelected) Color(0xFFFFAA00) else Color.White
@@ -204,7 +204,7 @@ fun ThemeSettings(
                 )
             ) {
                 ListItem(
-                    headlineContent = { 
+                    headlineContent = {
                         Text(
                             themeNames[themeId] ?: themeId,
                             color = if (isSelected) Color(0xFFFFAA00) else Color.White
@@ -272,7 +272,7 @@ fun SizeSettings(
                 )
             ) {
                 ListItem(
-                    headlineContent = { 
+                    headlineContent = {
                         Text(
                             sizeNames[size] ?: size.name,
                             color = if (isSelected) Color(0xFFFFAA00) else Color.White
@@ -300,7 +300,7 @@ fun SizeSettings(
             Spacer(modifier = Modifier.height(8.dp))
             Slider(
                 value = settings.keySizePercent / 100f,
-                onValueChange = { 
+                onValueChange = {
                     onSettingsChange(settings.copy(keySizePercent = (it * 100).toInt()))
                 },
                 valueRange = 0.5f..2.0f,
@@ -340,7 +340,7 @@ fun SoundSettings(
             Text("Volume", color = Color(0xFFFFAA00), style = MaterialTheme.typography.titleMedium)
             Slider(
                 value = settings.soundVolume / 100f,
-                onValueChange = { 
+                onValueChange = {
                     onSettingsChange(settings.copy(soundVolume = (it * 100).toInt()))
                 },
                 valueRange = 0f..1f,
@@ -396,7 +396,7 @@ fun VibrationSettings(
                 )
             ) {
                 ListItem(
-                    headlineContent = { 
+                    headlineContent = {
                         Text(
                             strengthNames[strength] ?: strength.name,
                             color = if (isSelected) Color(0xFFFFAA00) else Color.White
