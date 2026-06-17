@@ -1,0 +1,100 @@
+SamsungKeysCafeKeyboard/
+├── .github/
+│   └── workflows/
+│       └── android.yml
+├── .gitignore
+├── CONTRIBUTING.md
+├── LICENSE
+├── README.md
+├── app/
+│   ├── build.gradle.kts
+│   └── src/
+│       ├── main/
+│       │   ├── AndroidManifest.xml
+│       │   ├── assets/
+│       │   │   ├── layouts/
+│       │   │   │   ├── azerty.json
+│       │   │   │   ├── colemak.json
+│       │   │   │   ├── dvorak.json
+│       │   │   │   ├── numbers.json
+│       │   │   │   ├── qwerty.json
+│       │   │   │   ├── qwertz.json
+│       │   │   │   └── symbols.json
+│       │   │   └── themes/
+│       │   │       ├── amoled.json
+│       │   │       ├── dark.json
+│       │   │       ├── fire.json
+│       │   │       └── light.json
+│       │   ├── java/
+│       │   │   └── com/
+│       │   │       └── keys/
+│       │   │           └── cafe/
+│       │   │               └── keyboard/
+│       │   │                   ├── KeysCafeApplication.kt
+│       │   │                   ├── KeysCafeInputMethodService.kt
+│       │   │                   ├── accessibility/
+│       │   │                   │   └── AccessibilityHelper.kt
+│       │   │                   ├── data/
+│       │   │                   │   └── SettingsRepository.kt
+│       │   │                   ├── engine/
+│       │   │                   ├── haptic/
+│       │   │                   │   └── HapticEngine.kt
+│       │   │                   ├── layout/
+│       │   │                   │   └── LayoutManager.kt
+│       │   │                   ├── model/
+│       │   │                   │   ├── KeyModel.kt
+│       │   │                   │   ├── KeyState.kt
+│       │   │                   │   ├── LayoutModel.kt
+│       │   │                   │   ├── SettingsModel.kt
+│       │   │                   │   ├── ThemeModel.kt
+│       │   │                   │   └── TouchEvent.kt
+│       │   │                   ├── render/
+│       │   │                   │   ├── KeyboardRenderer.kt
+│       │   │                   │   └── KeyboardView.kt
+│       │   │                   ├── settings/
+│       │   │                   │   └── SettingsActivity.kt
+│       │   │                   ├── sound/
+│       │   │                   │   └── SoundEngine.kt
+│       │   │                   ├── theme/
+│       │   │                   │   └── ThemeManager.kt
+│       │   │                   ├── touch/
+│       │   │                   │   └── TouchEngine.kt
+│       │   │                   └── util/
+│       │   │                       ├── ErrorHandler.kt
+│       │   │                       └── PerformanceMonitor.kt
+│       │   └── res/
+│       │       ├── drawable/
+│       │       ├── layout/
+│       │       ├── mipmap-hdpi/
+│       │       ├── mipmap-mdpi/
+│       │       ├── mipmap-xhdpi/
+│       │       ├── mipmap-xxhdpi/
+│       │       ├── mipmap-xxxhdpi/
+│       │       ├── raw/
+│       │       ├── values/
+│       │       │   ├── colors.xml
+│       │       │   ├── strings.xml
+│       │       │   └── themes.xml
+│       │       └── xml/
+│       │           ├── file_paths.xml
+│       │           └── method.xml
+│       └── test/
+│           └── java/
+│               └── com/
+│                   └── keys/
+│                       └── cafe/
+│                           └── keyboard/
+├── build.gradle.kts
+├── docs/
+│   ├── architecture/
+│   └── screenshots/
+├── fastlane/
+│   └── metadata/
+│       └── android/
+│           └── en-US/
+│               ├── full_description.txt
+│               ├── images/
+│               ├── short_description.txt
+│               └── title.txt
+├── gradle.properties
+└── settings.gradle.kts

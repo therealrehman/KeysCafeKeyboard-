@@ -1,0 +1,16 @@
+{
+  "id": "amoled",
+  "name": "AMOLED Black",
+  "type": "AMOLED",
+  "backgroundColor": 4278190080,
+  "keyColor": 4279242768,
+  "keyPressedColor": 4294967295,
+  "keyTextColor": 4294967295,
+  "keyPressedTextColor": 4278190080,
+  "borderColor": 4279242768,
+  "shadowColor": 4278190080,
+  "cornerRadius": 4.0,
+  "glowEnabled": false,
+  "glowIntensity": 0.0,
+  "animationSpeed": 0.5
+}

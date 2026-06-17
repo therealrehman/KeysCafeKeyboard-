@@ -1,0 +1,73 @@
+{
+  "id": "colemak",
+  "name": "Colemak",
+  "locale": "en-US",
+  "type": "ALPHABET",
+  "rows": [
+    {
+      "keys": [
+        {"id": "1", "label": "1", "output": "1", "row": 0, "column": 0},
+        {"id": "2", "label": "2", "output": "2", "row": 0, "column": 1},
+        {"id": "3", "label": "3", "output": "3", "row": 0, "column": 2},
+        {"id": "4", "label": "4", "output": "4", "row": 0, "column": 3},
+        {"id": "5", "label": "5", "output": "5", "row": 0, "column": 4},
+        {"id": "6", "label": "6", "output": "6", "row": 0, "column": 5},
+        {"id": "7", "label": "7", "output": "7", "row": 0, "column": 6},
+        {"id": "8", "label": "8", "output": "8", "row": 0, "column": 7},
+        {"id": "9", "label": "9", "output": "9", "row": 0, "column": 8},
+        {"id": "0", "label": "0", "output": "0", "row": 0, "column": 9}
+      ]
+    },
+    {
+      "keys": [
+        {"id": "q", "label": "q", "output": "q", "row": 1, "column": 0},
+        {"id": "w", "label": "w", "output": "w", "row": 1, "column": 1},
+        {"id": "f", "label": "f", "output": "f", "row": 1, "column": 2},
+        {"id": "p", "label": "p", "output": "p", "row": 1, "column": 3},
+        {"id": "g", "label": "g", "output": "g", "row": 1, "column": 4},
+        {"id": "j", "label": "j", "output": "j", "row": 1, "column": 5},
+        {"id": "l", "label": "l", "output": "l", "row": 1, "column": 6},
+        {"id": "u", "label": "u", "output": "u", "row": 1, "column": 7},
+        {"id": "y", "label": "y", "output": "y", "row": 1, "column": 8},
+        {"id": "semicolon", "label": ";", "output": ";", "row": 1, "column": 9}
+      ]
+    },
+    {
+      "indent": 20,
+      "keys": [
+        {"id": "a", "label": "a", "output": "a", "row": 2, "column": 0},
+        {"id": "r", "label": "r", "output": "r", "row": 2, "column": 1},
+        {"id": "s", "label": "s", "output": "s", "row": 2, "column": 2},
+        {"id": "t", "label": "t", "output": "t", "row": 2, "column": 3},
+        {"id": "d", "label": "d", "output": "d", "row": 2, "column": 4},
+        {"id": "h", "label": "h", "output": "h", "row": 2, "column": 5},
+        {"id": "n", "label": "n", "output": "n", "row": 2, "column": 6},
+        {"id": "e", "label": "e", "output": "e", "row": 2, "column": 7},
+        {"id": "i", "label": "i", "output": "i", "row": 2, "column": 8},
+        {"id": "o", "label": "o", "output": "o", "row": 2, "column": 9}
+      ]
+    },
+    {
+      "keys": [
+        {"id": "shift", "label": "⇧", "output": "", "width": 1.3, "row": 3, "column": 0, "isModifier": true},
+        {"id": "z", "label": "z", "output": "z", "row": 3, "column": 1},
+        {"id": "x", "label": "x", "output": "x", "row": 3, "column": 2},
+        {"id": "c", "label": "c", "output": "c", "row": 3, "column": 3},
+        {"id": "v", "label": "v", "output": "v", "row": 3, "column": 4},
+        {"id": "b", "label": "b", "output": "b", "row": 3, "column": 5},
+        {"id": "k", "label": "k", "output": "k", "row": 3, "column": 6},
+        {"id": "m", "label": "m", "output": "m", "row": 3, "column": 7},
+        {"id": "backspace", "label": "⌫", "output": "", "width": 1.3, "row": 3, "column": 8, "isModifier": true, "isRepeatable": true, "soundType": "DELETE"}
+      ]
+    },
+    {
+      "keys": [
+        {"id": "symbols", "label": "!#1", "output": "", "row": 4, "column": 0, "isModifier": true},
+        {"id": "comma", "label": ",", "output": ",", "row": 4, "column": 1},
+        {"id": "space", "label": "Colemak", "output": " ", "width": 3.5, "row": 4, "column": 2, "soundType": "SPACE"},
+        {"id": "dot", "label": ".", "output": ".", "row": 4, "column": 3},
+        {"id": "enter", "label": "↵", "output": "\n", "width": 2.0, "row": 4, "column": 4, "isModifier": true, "soundType": "ENTER"}
+      ]
+    }
+  ]
+}

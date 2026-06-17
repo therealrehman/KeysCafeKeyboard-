@@ -1,0 +1,58 @@
+{
+  "id": "numbers",
+  "name": "Numbers",
+  "locale": "en-US",
+  "type": "NUMBER",
+  "rows": [
+    {
+      "keys": [
+        {"id": "1", "label": "1", "output": "1", "row": 0, "column": 0},
+        {"id": "2", "label": "2", "output": "2", "row": 0, "column": 1},
+        {"id": "3", "label": "3", "output": "3", "row": 0, "column": 2},
+        {"id": "4", "label": "4", "output": "4", "row": 0, "column": 3},
+        {"id": "5", "label": "5", "output": "5", "row": 0, "column": 4},
+        {"id": "6", "label": "6", "output": "6", "row": 0, "column": 5},
+        {"id": "7", "label": "7", "output": "7", "row": 0, "column": 6},
+        {"id": "8", "label": "8", "output": "8", "row": 0, "column": 7},
+        {"id": "9", "label": "9", "output": "9", "row": 0, "column": 8},
+        {"id": "0", "label": "0", "output": "0", "row": 0, "column": 9}
+      ]
+    },
+    {
+      "keys": [
+        {"id": "at", "label": "@", "output": "@", "row": 1, "column": 0},
+        {"id": "hash", "label": "#", "output": "#", "row": 1, "column": 1},
+        {"id": "dollar", "label": "$", "output": "$", "row": 1, "column": 2},
+        {"id": "percent", "label": "%", "output": "%", "row": 1, "column": 3},
+        {"id": "ampersand", "label": "&", "output": "&", "row": 1, "column": 4},
+        {"id": "asterisk", "label": "*", "output": "*", "row": 1, "column": 5},
+        {"id": "minus", "label": "-", "output": "-", "row": 1, "column": 6},
+        {"id": "plus", "label": "+", "output": "+", "row": 1, "column": 7},
+        {"id": "lparen", "label": "(", "output": "(", "row": 1, "column": 8},
+        {"id": "rparen", "label": ")", "output": ")", "row": 1, "column": 9}
+      ]
+    },
+    {
+      "keys": [
+        {"id": "symbols2", "label": "=\<", "output": "", "width": 1.5, "row": 2, "column": 0, "isModifier": true},
+        {"id": "exclaim", "label": "!", "output": "!", "row": 2, "column": 1},
+        {"id": "quote", "label": """", "output": """", "row": 2, "column": 2},
+        {"id": "apos", "label": "'", "output": "'", "row": 2, "column": 3},
+        {"id": "colon", "label": ":", "output": ":", "row": 2, "column": 4},
+        {"id": "semicolon", "label": ";", "output": ";", "row": 2, "column": 5},
+        {"id": "slash", "label": "/", "output": "/", "row": 2, "column": 6},
+        {"id": "question", "label": "?", "output": "?", "row": 2, "column": 7},
+        {"id": "backspace", "label": "⌫", "output": "", "width": 1.5, "row": 2, "column": 8, "isModifier": true, "isRepeatable": true, "soundType": "DELETE"}
+      ]
+    },
+    {
+      "keys": [
+        {"id": "abc", "label": "ABC", "output": "", "row": 3, "column": 0, "isModifier": true},
+        {"id": "comma", "label": ",", "output": ",", "row": 3, "column": 1},
+        {"id": "space", "label": "Space", "output": " ", "width": 3.5, "row": 3, "column": 2, "soundType": "SPACE"},
+        {"id": "dot", "label": ".", "output": ".", "row": 3, "column": 3},
+        {"id": "enter", "label": "↵", "output": "\n", "width": 2.0, "row": 3, "column": 4, "isModifier": true, "soundType": "ENTER"}
+      ]
+    }
+  ]
+}

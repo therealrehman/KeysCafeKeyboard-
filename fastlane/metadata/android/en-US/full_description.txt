@@ -1,0 +1,27 @@
+KeysCafe Keyboard is a professional Android custom keyboard focused on layout rendering and input experience.
+
+KEY FEATURES:
+🔥 Fire Glow Theme — Per-key colored glows with Samsung KeysCafe inspired animations
+⌨️ 5 Layouts — QWERTY, QWERTZ, AZERTY, Dvorak, Colemak
+🎨 4 Themes — Fire Glow, Dark, Light, AMOLED Black
+✋ Advanced Touch — Single/Double tap, Long press, Swipe gestures
+📳 Haptic Feedback — Customizable vibration patterns
+🔊 Sound Effects — Key-specific audio feedback
+♿ Accessibility — TalkBack, Large keys, High contrast, Color blind mode
+⚡ Performance — 60 FPS, <50ms open time, <100MB memory
+
+LAYOUTS:
+• QWERTY — Standard English
+• QWERTZ — German
+• AZERTY — French
+• Dvorak — Programmer optimized
+• Colemak — Ergonomic
+
+CUSTOMIZATION:
+• Key sizes: Small to Extra Large (50%-200%)
+• Sound volume control
+• Vibration strength: None to Strong
+• Animation speed control
+• Glow effect toggle
+
+No AI, no cloud sync, no data collection. Pure keyboard experience.

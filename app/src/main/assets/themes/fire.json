@@ -1,0 +1,16 @@
+{
+  "id": "fire",
+  "name": "Fire Glow",
+  "type": "FIRE",
+  "backgroundColor": 4278190080,
+  "keyColor": 4278716424,
+  "keyPressedColor": 4294945280,
+  "keyTextColor": 4288845824,
+  "keyPressedTextColor": 4278190080,
+  "borderColor": 4279308561,
+  "shadowColor": 4278190080,
+  "cornerRadius": 8.0,
+  "glowEnabled": true,
+  "glowIntensity": 0.8,
+  "animationSpeed": 1.0
+}

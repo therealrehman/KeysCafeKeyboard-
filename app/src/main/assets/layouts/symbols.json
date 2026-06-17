@@ -1,0 +1,58 @@
+{
+  "id": "symbols",
+  "name": "Symbols",
+  "locale": "en-US",
+  "type": "SYMBOL",
+  "rows": [
+    {
+      "keys": [
+        {"id": "tilde", "label": "~", "output": "~", "row": 0, "column": 0},
+        {"id": "grave", "label": "`", "output": "`", "row": 0, "column": 1},
+        {"id": "pipe", "label": "|", "output": "|", "row": 0, "column": 2},
+        {"id": "bullet", "label": "•", "output": "•", "row": 0, "column": 3},
+        {"id": "root", "label": "√", "output": "√", "row": 0, "column": 4},
+        {"id": "pi", "label": "π", "output": "π", "row": 0, "column": 5},
+        {"id": "divide", "label": "÷", "output": "÷", "row": 0, "column": 6},
+        {"id": "times", "label": "×", "output": "×", "row": 0, "column": 7},
+        {"id": "minus", "label": "−", "output": "−", "row": 0, "column": 8},
+        {"id": "plus", "label": "+", "output": "+", "row": 0, "column": 9}
+      ]
+    },
+    {
+      "keys": [
+        {"id": "degree", "label": "°", "output": "°", "row": 1, "column": 0},
+        {"id": "caret", "label": "^", "output": "^", "row": 1, "column": 1},
+        {"id": "underscore", "label": "_", "output": "_", "row": 1, "column": 2},
+        {"id": "equal", "label": "=", "output": "=", "row": 1, "column": 3},
+        {"id": "lbrace", "label": "{", "output": "{", "row": 1, "column": 4},
+        {"id": "rbrace", "label": "}", "output": "}", "row": 1, "column": 5},
+        {"id": "euro", "label": "€", "output": "€", "row": 1, "column": 6},
+        {"id": "pound", "label": "£", "output": "£", "row": 1, "column": 7},
+        {"id": "yen", "label": "¥", "output": "¥", "row": 1, "column": 8},
+        {"id": "cent", "label": "¢", "output": "¢", "row": 1, "column": 9}
+      ]
+    },
+    {
+      "keys": [
+        {"id": "numbers2", "label": "123", "output": "", "width": 1.5, "row": 2, "column": 0, "isModifier": true},
+        {"id": "copy", "label": "©", "output": "©", "row": 2, "column": 1},
+        {"id": "reg", "label": "®", "output": "®", "row": 2, "column": 2},
+        {"id": "tm", "label": "™", "output": "™", "row": 2, "column": 3},
+        {"id": "lbracket", "label": "[", "output": "[", "row": 2, "column": 4},
+        {"id": "rbracket", "label": "]", "output": "]", "row": 2, "column": 5},
+        {"id": "langle", "label": "<", "output": "<", "row": 2, "column": 6},
+        {"id": "rangle", "label": ">", "output": ">", "row": 2, "column": 7},
+        {"id": "backspace", "label": "⌫", "output": "", "width": 1.5, "row": 2, "column": 8, "isModifier": true, "isRepeatable": true, "soundType": "DELETE"}
+      ]
+    },
+    {
+      "keys": [
+        {"id": "abc", "label": "ABC", "output": "", "row": 3, "column": 0, "isModifier": true},
+        {"id": "comma", "label": ",", "output": ",", "row": 3, "column": 1},
+        {"id": "space", "label": "Space", "output": " ", "width": 3.5, "row": 3, "column": 2, "soundType": "SPACE"},
+        {"id": "dot", "label": ".", "output": ".", "row": 3, "column": 3},
+        {"id": "enter", "label": "↵", "output": "\n", "width": 2.0, "row": 3, "column": 4, "isModifier": true, "soundType": "ENTER"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "dark",
+  "name": "Dark",
+  "type": "DARK",
+  "backgroundColor": 4278190080,
+  "keyColor": 4282664004,
+  "keyPressedColor": 4294967295,
+  "keyTextColor": 4294967295,
+  "keyPressedTextColor": 4278190080,
+  "borderColor": 4285558896,
+  "shadowColor": 4278190080,
+  "cornerRadius": 8.0,
+  "glowEnabled": false,
+  "glowIntensity": 0.0,
+  "animationSpeed": 1.0
+}

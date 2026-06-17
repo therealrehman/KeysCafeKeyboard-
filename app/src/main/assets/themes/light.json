@@ -1,0 +1,16 @@
+{
+  "id": "light",
+  "name": "Light",
+  "type": "LIGHT",
+  "backgroundColor": 4294967295,
+  "keyColor": 4293256677,
+  "keyPressedColor": 4282664004,
+  "keyTextColor": 4278190080,
+  "keyPressedTextColor": 4294967295,
+  "borderColor": 4291611852,
+  "shadowColor": 4293256677,
+  "cornerRadius": 8.0,
+  "glowEnabled": false,
+  "glowIntensity": 0.0,
+  "animationSpeed": 1.0
+}

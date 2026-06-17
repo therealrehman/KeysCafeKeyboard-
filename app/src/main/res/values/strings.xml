@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KeysCafe Keyboard</string>
+    <string name="keyboard_name">KeysCafe Keyboard</string>
+    <string name="subtype_en_us">English (US)</string>
+    <string name="subtype_de">German</string>
+    <string name="subtype_fr">French</string>
+
+    <!-- Settings -->
+    <string name="settings_title">KeysCafe Settings</string>
+    <string name="settings_layout">Keyboard Layout</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_key_size">Key Size</string>
+    <string name="settings_sound">Sound</string>
+    <string name="settings_vibration">Vibration</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_accessibility">Accessibility</string>
+
+    <!-- Layouts -->
+    <string name="layout_qwerty">QWERTY</string>
+    <string name="layout_qwertz">QWERTZ</string>
+    <string name="layout_azerty">AZERTY</string>
+    <string name="layout_dvorak">Dvorak</string>
+    <string name="layout_colemak">Colemak</string>
+
+    <!-- Themes -->
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_amoled">AMOLED Black</string>
+    <string name="theme_fire">Fire Glow</string>
+    <string name="theme_custom">Custom</string>
+
+    <!-- Key Sizes -->
+    <string name="size_small">Small</string>
+    <string name="size_medium">Medium</string>
+    <string name="size_large">Large</string>
+    <string name="size_extra_large">Extra Large</string>
+
+    <!-- Accessibility -->
+    <string name="accessibility_talkback">TalkBack Support</string>
+    <string name="accessibility_large_keys">Large Keys</string>
+    <string name="accessibility_high_contrast">High Contrast</string>
+    <string name="accessibility_color_blind">Color Blind Mode</string>
+
+    <!-- Actions -->
+    <string name="action_enable">Enable Keyboard</string>
+    <string name="action_select">Select Keyboard</string>
+    <string name="action_done">Done</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_apply">Apply</string>
+    <string name="action_preview">Preview</string>
+
+    <!-- Errors -->
+    <string name="error_layout_missing">Layout file missing</string>
+    <string name="error_theme_corrupted">Theme file corrupted</string>
+    <string name="error_crash_recovery">Keyboard recovered from crash</string>
+    <string name="error_invalid_key">Invalid key definition</string>
+    <string name="error_memory">Memory limit reached</string>
+</resources>
