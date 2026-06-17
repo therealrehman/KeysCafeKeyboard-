@@ -6,6 +6,12 @@ import kotlinx.parcelize.Parcelize
 /**
  * Represents a single key on the keyboard.
  * This is the core data model for all keyboard keys.
+ *
+ * Note: fields that may be absent from layout JSON use nullable backing
+ * properties (vibrationTypeRaw, glowColorRaw, accessibilityLabelRaw) with
+ * non-null computed accessors. Gson's reflection-based deserializer does
+ * NOT honor Kotlin default parameter values, so any field missing from
+ * JSON must be nullable to avoid silent corruption/crashes.
  */
 @Parcelize
 data class KeyModel(
@@ -21,11 +27,20 @@ data class KeyModel(
     val isRepeatable: Boolean = false,
     val supportsLongPress: Boolean = false,
     val popupCharacters: List<String> = emptyList(),
-    val accessibilityLabel: String = label,
+    private val accessibilityLabel: String? = null,
     val soundType: SoundType = SoundType.STANDARD,
-    val vibrationType: VibrationType = VibrationType.MEDIUM,
-    val glowColor: GlowColor = GlowColor.DEFAULT
+    private val vibrationType: VibrationType? = null,
+    private val glowColor: GlowColor? = null
 ) : Parcelable {
+
+    val accessibilityLabelOrDefault: String
+        get() = accessibilityLabel ?: label
+
+    val vibrationTypeOrDefault: VibrationType
+        get() = vibrationType ?: VibrationType.MEDIUM
+
+    val glowColorOrDefault: GlowColor
+        get() = glowColor ?: GlowColor.DEFAULT
 
     enum class SoundType {
         STANDARD, DELETE, ENTER, SPACE, SHIFT, SYMBOL, NONE

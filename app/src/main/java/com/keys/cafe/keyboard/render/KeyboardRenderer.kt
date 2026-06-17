@@ -69,26 +69,26 @@ fun KeyboardRenderer(
             .fillMaxWidth()
             .background(colors.background)
             .padding(
-                start = layout.paddingStart.dp,
-                end = layout.paddingEnd.dp,
-                top = layout.paddingTop.dp,
-                bottom = layout.paddingBottom.dp
+                start = layout.paddingStartOrDefault.dp,
+                end = layout.paddingEndOrDefault.dp,
+                top = layout.paddingTopOrDefault.dp,
+                bottom = layout.paddingBottomOrDefault.dp
             ),
-        verticalArrangement = Arrangement.spacedBy(layout.verticalGap.dp)
+        verticalArrangement = Arrangement.spacedBy(layout.verticalGapOrDefault.dp)
     ) {
         layout.rows.forEachIndexed { rowIndex, row ->
             val rowHeight = if (rowIndex == 0) numberRowHeight else keyHeight
-            val indentPadding = row.indent.dp
+            val indentPadding = row.indentOrDefault.dp
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = indentPadding),
-                horizontalArrangement = Arrangement.spacedBy(layout.horizontalGap.dp)
+                horizontalArrangement = Arrangement.spacedBy(layout.horizontalGapOrDefault.dp)
             ) {
                 row.keys.forEach { key ->
                     val isNumberRow = rowIndex == 0
-                    val keyWidth = calculateKeyWidth(key, row, screenWidth, layout, layout.horizontalGap.dp)
+                    val keyWidth = calculateKeyWidth(key, row, screenWidth, layout, layout.horizontalGapOrDefault.dp)
 
                     KeyButton(
                         key = key,
@@ -157,7 +157,7 @@ private fun KeyButton(
         else -> theme.key
     }
 
-    val glowColor = when (key.glowColor) {
+    val glowColor = when (key.glowColorOrDefault) {
         KeyModel.GlowColor.RED -> Color(0xFFFF3333)
         KeyModel.GlowColor.BLUE -> Color(0xFF3396FF)
         KeyModel.GlowColor.GREEN -> Color(0xFF00FF96)
@@ -266,7 +266,7 @@ private fun calculateKeyWidth(
 ): androidx.compose.ui.unit.Dp {
     val totalWeight = row.keys.sumOf { it.weight.toDouble() }.toFloat()
     val totalGap = gap * (row.keys.size - 1)
-    val availableWidth = screenWidth - (layout.paddingStart + layout.paddingEnd).dp - totalGap
+    val availableWidth = screenWidth - (layout.paddingStartOrDefault + layout.paddingEndOrDefault).dp - totalGap
     val baseWidth = availableWidth / totalWeight
     return (baseWidth * key.weight).coerceAtLeast(28.dp)
 }

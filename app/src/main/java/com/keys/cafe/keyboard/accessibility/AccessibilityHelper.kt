@@ -41,7 +41,7 @@ class AccessibilityHelper(private val context: Context) {
             "enter" -> "Enter key, new line"
             "space" -> "Space key"
             "symbols" -> "Symbols key, switch to symbols"
-            else -> key.accessibilityLabel
+            else -> key.accessibilityLabelOrDefault
         }
     }
 

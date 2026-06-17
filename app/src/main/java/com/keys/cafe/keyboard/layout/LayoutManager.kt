@@ -64,8 +64,8 @@ class LayoutManager(private val context: Context) {
             val layout = gson.fromJson(json, LayoutModel::class.java)
             layoutCache[layoutId] = layout
             layout
-        } catch (e: IOException) {
-            e.printStackTrace()
+        } catch (e: Exception) {
+            android.util.Log.e("KeysCafeLayout", "Failed to load layout '$layoutId'", e)
             null
         }
     }

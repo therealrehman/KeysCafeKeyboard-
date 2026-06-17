@@ -31,7 +31,7 @@ class HapticEngine(private val context: Context) {
     fun performHaptic(key: KeyModel) {
         if (!enabled) return
 
-        when (key.vibrationType) {
+        when (key.vibrationTypeOrDefault) {
             KeyModel.VibrationType.NONE -> return
             KeyModel.VibrationType.LIGHT -> performLightVibration()
             KeyModel.VibrationType.MEDIUM -> performMediumVibration()

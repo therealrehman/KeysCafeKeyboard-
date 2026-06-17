@@ -47,8 +47,8 @@ class ThemeManager(private val context: Context) {
             val theme = gson.fromJson(json, ThemeModel::class.java)
             themeCache[themeId] = theme
             theme
-        } catch (e: IOException) {
-            e.printStackTrace()
+        } catch (e: Exception) {
+            android.util.Log.e("KeysCafeTheme", "Failed to load theme '$themeId'", e)
             null
         }
     }
