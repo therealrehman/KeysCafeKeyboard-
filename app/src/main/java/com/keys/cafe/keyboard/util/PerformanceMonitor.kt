@@ -5,7 +5,7 @@ import kotlin.system.measureNanoTime
 
 /**
  * Performance monitoring utility.
- * 
+ *
  * Tracks:
  * - Keyboard open time
  * - Touch response time
@@ -16,7 +16,7 @@ import kotlin.system.measureNanoTime
 class PerformanceMonitor {
 
     companion object {
-        private const val TAG = "KeysCafePerf"
+        internal const val TAG = "KeysCafePerf"
 
         // Performance thresholds
         const val MAX_OPEN_TIME_MS = 50L

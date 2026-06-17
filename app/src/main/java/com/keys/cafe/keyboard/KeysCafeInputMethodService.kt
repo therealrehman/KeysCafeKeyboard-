@@ -6,6 +6,8 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalViewModelStoreOwner
 import androidx.lifecycle.*
 import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
@@ -15,7 +17,6 @@ import com.keys.cafe.keyboard.model.KeyboardSettings
 import com.keys.cafe.keyboard.render.KeyboardView
 import com.keys.cafe.keyboard.settings.SettingsActivity
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 
 class KeysCafeInputMethodService : InputMethodService(),
     LifecycleOwner,
@@ -47,24 +48,26 @@ class KeysCafeInputMethodService : InputMethodService(),
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
 
         composeView = ComposeView(this).apply {
-            setViewTreeLifecycleOwner(this@KeysCafeInputMethodService)
-            setViewTreeViewModelStoreOwner(this@KeysCafeInputMethodService)
-            setViewTreeSavedStateRegistryOwner(this@KeysCafeInputMethodService)
             setContent {
-                var settings by remember { mutableStateOf(currentSettings) }
-                LaunchedEffect(Unit) {
-                    settingsRepository.settingsFlow.collectLatest { newSettings ->
-                        settings = newSettings
-                        currentSettings = newSettings
+                CompositionLocalProvider(
+                    LocalLifecycleOwner provides this@KeysCafeInputMethodService,
+                    LocalViewModelStoreOwner provides this@KeysCafeInputMethodService
+                ) {
+                    var settings by remember { mutableStateOf(currentSettings) }
+                    LaunchedEffect(Unit) {
+                        settingsRepository.settingsFlow.collectLatest { newSettings ->
+                            settings = newSettings
+                            currentSettings = newSettings
+                        }
                     }
+                    KeyboardView(
+                        settings = settings,
+                        onTextInput = { text -> handleTextInput(text) },
+                        onDelete = { handleDelete() },
+                        onEnter = { handleEnter() },
+                        onSettings = { openSettings() }
+                    )
                 }
-                KeyboardView(
-                    settings = settings,
-                    onTextInput = { text -> handleTextInput(text) },
-                    onDelete = { handleDelete() },
-                    onEnter = { handleEnter() },
-                    onSettings = { openSettings() }
-                )
             }
         }
         return composeView

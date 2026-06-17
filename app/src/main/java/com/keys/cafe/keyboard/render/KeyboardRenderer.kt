@@ -265,8 +265,8 @@ private fun calculateKeyWidth(
     gap: androidx.compose.ui.unit.Dp
 ): androidx.compose.ui.unit.Dp {
     val totalWeight = row.keys.sumOf { it.weight.toDouble() }.toFloat()
-    val availableWidth = screenWidth - (layout.paddingStart + layout.paddingEnd).dp - 
-                        (row.keys.size - 1) * gap
+    val totalGap = gap * (row.keys.size - 1)
+    val availableWidth = screenWidth - (layout.paddingStart + layout.paddingEnd).dp - totalGap
     val baseWidth = availableWidth / totalWeight
     return (baseWidth * key.weight).coerceAtLeast(28.dp)
 }
