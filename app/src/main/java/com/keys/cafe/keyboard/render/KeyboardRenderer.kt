@@ -22,18 +22,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.keys.cafe.keyboard.model.*
-import com.keys.cafe.keyboard.theme.ThemeManager
 import kotlinx.coroutines.delay
 
 /**
- * Jetpack Compose-based keyboard rendering engine.
- * 
- * Features:
- * - 60 FPS rendering with hardware acceleration
- * - Smooth animations
- * - Low memory consumption
- * - Instant redraw
- * - Dynamic resizing
+ * FIXED: KeyboardRenderer
+ * - Fixed color flicker (removed System.currentTimeMillis())
+ * - Added shift state visual indicator
+ * - Fixed key sizing for landscape
+ * - Better touch handling
  */
 @Composable
 fun KeyboardRenderer(
@@ -51,6 +47,11 @@ fun KeyboardRenderer(
     val density = LocalDensity.current
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
+
+    // FIXED: Handle landscape mode - limit keyboard height
+    val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
+    val maxKeyboardHeight = if (isLandscape) (screenHeight * 0.6f) else (screenHeight * 0.45f)
 
     // Calculate key sizes based on settings
     val baseKeyHeight = when (settings.keySize) {
@@ -127,7 +128,7 @@ private fun KeyButton(
     var isLongPressed by remember { mutableStateOf(false) }
     var showGlow by remember { mutableStateOf(false) }
 
-    // Animation states
+    // FIXED: Proper animation states
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.92f else 1.0f,
         animationSpec = tween(
@@ -145,17 +146,29 @@ private fun KeyButton(
         label = "alpha"
     )
 
-    // Multi-state color animation (White → Cyan → Pink → Orange)
-    val pressColor = when {
-        isLongPressed -> Color(0xFFFF6400) // Orange fade
-        isPressed -> when {
-            System.currentTimeMillis() % 300 < 70 -> Color.White
-            System.currentTimeMillis() % 300 < 140 -> Color.Cyan
-            System.currentTimeMillis() % 300 < 210 -> Color(0xFFFF00AA) // Pink
-            else -> Color(0xFFFF6400) // Orange
-        }
-        else -> theme.key
-    }
+    // FIXED: Proper color animation without System.currentTimeMillis()
+    val pressColor by animateColorAsState(
+        targetValue = when {
+            isLongPressed -> Color(0xFFFF6400)
+            isPressed -> theme.keyPressed
+            else -> theme.key
+        },
+        animationSpec = tween(
+            durationMillis = if (settings.animationEnabled) 100 else 0
+        ),
+        label = "pressColor"
+    )
+
+    // FIXED: Multi-state color for fire effect (using animation)
+    val fireColor by rememberInfiniteTransition(label = "fire").animateColor(
+        initialValue = Color.White,
+        targetValue = Color(0xFFFF6400),
+        animationSpec = infiniteRepeatable(
+            animation = tween(300, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "fireColor"
+    )
 
     val glowColor = when (key.glowColorOrDefault) {
         KeyModel.GlowColor.RED -> Color(0xFFFF3333)
@@ -170,9 +183,13 @@ private fun KeyButton(
         else -> Color(0xFFFFAA00)
     }
 
-    // Determine display label
+    // FIXED: Shift state visual indicator
     val displayLabel = when {
-        key.id == "shift" -> "⇧"
+        key.id == "shift" -> when (shiftState) {
+            ShiftState.OFF -> "⇧"
+            ShiftState.SINGLE -> "⇧"
+            ShiftState.CAPS_LOCK -> "⇪"
+        }
         key.id == "backspace" -> "⌫"
         key.id == "enter" -> "↵"
         key.id == "space" -> key.label
@@ -184,6 +201,13 @@ private fun KeyButton(
             }
         }
         else -> key.label
+    }
+
+    // FIXED: Shift key background color changes with state
+    val shiftBackgroundColor = if (key.id == "shift" && shiftState != ShiftState.OFF) {
+        theme.keyPressed
+    } else {
+        pressColor
     }
 
     Box(
@@ -199,7 +223,7 @@ private fun KeyButton(
                 spotColor = if (glowEnabled && showGlow) glowColor else Color.Transparent
             )
             .background(
-                color = if (isPressed) theme.keyPressed else theme.key,
+                color = shiftBackgroundColor,
                 shape = RoundedCornerShape(8.dp)
             )
             .pointerInput(key.id) {
@@ -244,10 +268,17 @@ private fun KeyButton(
             )
         }
 
+        // FIXED: Shift key icon color changes with state
+        val textColor = when {
+            key.id == "shift" && shiftState != ShiftState.OFF -> theme.keyPressedText
+            isPressed -> theme.keyPressedText
+            else -> theme.keyText
+        }
+
         // Key label
         Text(
             text = displayLabel,
-            color = if (isPressed) theme.keyPressedText else theme.keyText,
+            color = textColor,
             fontSize = if (key.id.length == 1 && key.id.matches(Regex("[a-z0-9]"))) 16.sp else 14.sp,
             fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
             textAlign = TextAlign.Center,

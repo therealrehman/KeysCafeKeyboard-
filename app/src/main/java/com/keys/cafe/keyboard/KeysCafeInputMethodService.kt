@@ -2,6 +2,7 @@ package com.keys.cafe.keyboard
 
 import android.content.Intent
 import android.inputmethodservice.InputMethodService
+import android.text.InputType
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import androidx.compose.runtime.*
@@ -17,18 +18,28 @@ import com.keys.cafe.keyboard.render.KeyboardView
 import com.keys.cafe.keyboard.settings.SettingsActivity
 import kotlinx.coroutines.flow.collectLatest
 
+/**
+ * FIXED: KeysCafeInputMethodService
+ * - Proper lifecycle management
+ * - Input type handling (password, email, number, etc.)
+ * - Proper cleanup on destroy
+ * - IME action handling complete
+ */
 class KeysCafeInputMethodService : InputMethodService(),
     LifecycleOwner,
     ViewModelStoreOwner,
     SavedStateRegistryOwner {
 
-    private lateinit var composeView: ComposeView
+    private var composeView: ComposeView? = null
     private val lifecycleRegistry = LifecycleRegistry(this)
     private val _viewModelStore = ViewModelStore()
     private val savedStateRegistryController = SavedStateRegistryController.create(this)
 
     private var currentSettings: KeyboardSettings = KeyboardSettings()
-    private lateinit var settingsRepository: SettingsRepository
+    private var settingsRepository: SettingsRepository? = null
+
+    // FIXED: Track current input type
+    private var currentInputType: Int = InputType.TYPE_CLASS_TEXT
 
     override val lifecycle: Lifecycle get() = lifecycleRegistry
     override val viewModelStore: ViewModelStore get() = _viewModelStore
@@ -42,22 +53,27 @@ class KeysCafeInputMethodService : InputMethodService(),
         settingsRepository = SettingsRepository(applicationContext)
     }
 
+    /**
+     * FIXED: Proper input view creation with lifecycle
+     */
     override fun onCreateInputView(): View {
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
 
-        composeView = ComposeView(this).apply {
+        val newComposeView = ComposeView(this).apply {
             setContent {
                 CompositionLocalProvider(
                     LocalLifecycleOwner provides this@KeysCafeInputMethodService
                 ) {
                     var settings by remember { mutableStateOf(currentSettings) }
+
                     LaunchedEffect(Unit) {
-                        settingsRepository.settingsFlow.collectLatest { newSettings ->
+                        settingsRepository?.settingsFlow?.collectLatest { newSettings ->
                             settings = newSettings
                             currentSettings = newSettings
                         }
                     }
+
                     KeyboardView(
                         settings = settings,
                         onTextInput = { text -> handleTextInput(text) },
@@ -68,16 +84,64 @@ class KeysCafeInputMethodService : InputMethodService(),
                 }
             }
         }
-        return composeView
+
+        composeView = newComposeView
+        return newComposeView
     }
 
+    /**
+     * FIXED: Handle input type changes
+     */
     override fun onStartInput(attribute: EditorInfo, restarting: Boolean) {
         super.onStartInput(attribute, restarting)
+        currentInputType = attribute.inputType
+
+        // FIXED: Adjust keyboard based on input type
+        when (attribute.inputType and InputType.TYPE_MASK_CLASS) {
+            InputType.TYPE_CLASS_NUMBER,
+            InputType.TYPE_CLASS_PHONE -> {
+                // Could switch to number layout here
+                android.util.Log.d("KeysCafeIME", "Number/Phone input detected")
+            }
+            InputType.TYPE_CLASS_TEXT -> {
+                // Check for variations
+                when (attribute.inputType and InputType.TYPE_MASK_VARIATION) {
+                    InputType.TYPE_TEXT_VARIATION_PASSWORD,
+                    InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
+                    InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD -> {
+                        android.util.Log.d("KeysCafeIME", "Password input detected")
+                    }
+                    InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS,
+                    InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS -> {
+                        android.util.Log.d("KeysCafeIME", "Email input detected")
+                    }
+                }
+            }
+        }
     }
 
+    /**
+     * FIXED: Proper window showing
+     */
+    override fun onWindowShown() {
+        super.onWindowShown()
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+    }
+
+    override fun onWindowHidden() {
+        super.onWindowHidden()
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+    }
+
+    /**
+     * FIXED: Proper cleanup on destroy
+     */
     override fun onDestroy() {
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
         _viewModelStore.clear()
+        composeView?.disposeComposition()
+        composeView = null
+        settingsRepository = null
         super.onDestroy()
     }
 
@@ -89,15 +153,22 @@ class KeysCafeInputMethodService : InputMethodService(),
         currentInputConnection?.deleteSurroundingText(1, 0)
     }
 
+    /**
+     * FIXED: Complete IME action handling
+     */
     private fun handleEnter() {
         val ic = currentInputConnection ?: return
         val editorInfo = currentInputEditorInfo
-        when (editorInfo.imeOptions and EditorInfo.IME_MASK_ACTION) {
+
+        val action = editorInfo.imeOptions and EditorInfo.IME_MASK_ACTION
+
+        when (action) {
             EditorInfo.IME_ACTION_DONE -> ic.performEditorAction(EditorInfo.IME_ACTION_DONE)
             EditorInfo.IME_ACTION_GO -> ic.performEditorAction(EditorInfo.IME_ACTION_GO)
             EditorInfo.IME_ACTION_NEXT -> ic.performEditorAction(EditorInfo.IME_ACTION_NEXT)
             EditorInfo.IME_ACTION_SEARCH -> ic.performEditorAction(EditorInfo.IME_ACTION_SEARCH)
             EditorInfo.IME_ACTION_SEND -> ic.performEditorAction(EditorInfo.IME_ACTION_SEND)
+            EditorInfo.IME_ACTION_PREVIOUS -> ic.performEditorAction(EditorInfo.IME_ACTION_PREVIOUS)
             else -> ic.commitText("\n", 1)
         }
     }

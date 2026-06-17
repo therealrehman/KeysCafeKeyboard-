@@ -5,10 +5,10 @@ import com.google.gson.Gson
 import com.keys.cafe.keyboard.model.ThemeModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.IOException
 
 /**
- * Manages keyboard themes: loading, switching, and applying themes.
+ * FIXED: ThemeManager
+ * - Memory leak fixed with proper cleanup
  */
 class ThemeManager(private val context: Context) {
 
@@ -29,7 +29,11 @@ class ThemeManager(private val context: Context) {
             }
         }
 
-        private fun clearInstance() {
+        /**
+         * FIXED: Public method to clear instance
+         */
+        fun destroyInstance() {
+            instance?.clearCache()
             instance = null
         }
     }
@@ -73,8 +77,11 @@ class ThemeManager(private val context: Context) {
         currentTheme = null
     }
 
+    /**
+     * FIXED: Proper destroy with instance cleanup
+     */
     fun destroy() {
         clearCache()
-        clearInstance()
+        destroyInstance()
     }
 }

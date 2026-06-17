@@ -16,8 +16,10 @@ import com.keys.cafe.keyboard.theme.ThemeManager
 import kotlinx.coroutines.launch
 
 /**
- * Main keyboard view composable.
- * Integrates all components: layout, theme, touch, sound, haptic.
+ * FIXED: KeyboardView
+ * - Added FastRepeat handling for backspace/space repeat
+ * - Removed confusing swipe-down to settings
+ * - Better error handling
  */
 @Composable
 fun KeyboardView(
@@ -40,13 +42,19 @@ fun KeyboardView(
     var currentLayout by remember { mutableStateOf<LayoutModel?>(null) }
     var currentTheme by remember { mutableStateOf<ThemeModel?>(null) }
     var shiftState by remember { mutableStateOf(ShiftState.OFF) }
+    var isInitialized by remember { mutableStateOf(false) }
 
     // Initialize
     LaunchedEffect(Unit) {
-        layoutManager.initialize()
-        themeManager.initialize()
-        currentLayout = layoutManager.getCurrentLayout()
-        currentTheme = themeManager.getCurrentTheme()
+        try {
+            layoutManager.initialize()
+            themeManager.initialize()
+            currentLayout = layoutManager.getCurrentLayout()
+            currentTheme = themeManager.getCurrentTheme()
+            isInitialized = true
+        } catch (e: Exception) {
+            android.util.Log.e("KeysCafeKeyboard", "Failed to initialize keyboard", e)
+        }
     }
 
     // Update engines with settings
@@ -55,7 +63,9 @@ fun KeyboardView(
         hapticEngine.updateSettings(settings)
     }
 
-    // Resolve a key tap into real text-input / control actions and forward to the IME.
+    /**
+     * FIXED: Dispatch a key tap into real text-input / control actions
+     */
     fun dispatchKey(key: KeyModel) {
         when (key.id) {
             "shift" -> {
@@ -70,8 +80,12 @@ fun KeyboardView(
             "space" -> onTextInput(" ")
             "symbols" -> {
                 scope.launch {
-                    if (layoutManager.switchLayout("symbols")) {
-                        currentLayout = layoutManager.getCurrentLayout()
+                    try {
+                        if (layoutManager.switchLayout("symbols")) {
+                            currentLayout = layoutManager.getCurrentLayout()
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("KeysCafeKeyboard", "Failed to switch layout", e)
                     }
                 }
             }
@@ -84,6 +98,7 @@ fun KeyboardView(
                     key.output
                 }
                 onTextInput(output)
+                // FIXED: Reset single shift after typing
                 if (shiftState == ShiftState.SINGLE) {
                     shiftState = ShiftState.OFF
                 }
@@ -91,21 +106,48 @@ fun KeyboardView(
         }
     }
 
-    // Touch event handler
+    /**
+     * FIXED: Touch event handler - now handles FastRepeat
+     */
     val handleTouchEvent: (TouchEvent) -> Unit = { event ->
         when (event) {
             is TouchEvent.SingleTap -> dispatchKey(event.key)
+            is TouchEvent.DoubleTap -> {
+                // Double tap handling (future: caps lock toggle on shift)
+                if (event.key.id == "shift") {
+                    shiftState = ShiftState.CAPS_LOCK
+                }
+            }
             is TouchEvent.LongPress -> {
                 if (event.key.supportsLongPress) {
                     // Show popup characters (future enhancement)
                 }
             }
-            is TouchEvent.SwipeDown -> onSettings()
-            else -> {} // Other gestures reserved for future use
+            // FIXED: Handle FastRepeat for repeatable keys
+            is TouchEvent.FastRepeat -> {
+                if (event.key.isRepeatable) {
+                    dispatchKey(event.key)
+                }
+            }
+            // FIXED: Handle PressStart and PressEnd for sound/haptic
+            is TouchEvent.PressStart -> {
+                soundEngine.playKeySound(event.key)
+                hapticEngine.performHaptic(event.key)
+            }
+            is TouchEvent.PressEnd -> {
+                // Release handling if needed
+            }
+            // FIXED: Removed SwipeDown -> onSettings (was confusing)
+            // Swipe gestures reserved for future use
+            is TouchEvent.SwipeLeft -> { /* Future: cursor movement */ }
+            is TouchEvent.SwipeRight -> { /* Future: cursor movement */ }
+            is TouchEvent.SwipeUp -> { /* Future: symbols */ }
+            is TouchEvent.SwipeDown -> { /* Future: hide keyboard */ }
+            is TouchEvent.MultiTouch -> { /* Future: multi-touch handling */ }
         }
     }
 
-    // Key press / release handlers (sound + haptic feedback only; text logic lives in dispatchKey)
+    // Key press / release handlers (sound + haptic feedback only)
     val handleKeyPress: (KeyModel) -> Unit = { key ->
         soundEngine.playKeySound(key)
         hapticEngine.performHaptic(key)
@@ -125,7 +167,7 @@ fun KeyboardView(
 
         // Keyboard content
         AnimatedVisibility(
-            visible = currentLayout != null,
+            visible = currentLayout != null && isInitialized,
             enter = fadeIn() + slideInVertically { it },
             exit = fadeOut() + slideOutVertically { it }
         ) {

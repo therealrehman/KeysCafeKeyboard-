@@ -9,7 +9,7 @@ import com.keys.cafe.keyboard.model.KeyModel
 import com.keys.cafe.keyboard.model.KeyboardSettings
 
 /**
- * Manages haptic feedback for keyboard.
+ * FIXED: HapticEngine - Now properly uses strength setting
  */
 class HapticEngine(private val context: Context) {
 
@@ -26,12 +26,25 @@ class HapticEngine(private val context: Context) {
     var strength: KeyboardSettings.VibrationStrength = KeyboardSettings.VibrationStrength.MEDIUM
 
     /**
-     * Perform haptic feedback for key press.
+     * FIXED: Perform haptic feedback for key press - now uses strength setting
      */
     fun performHaptic(key: KeyModel) {
-        if (!enabled) return
+        if (!enabled || !hasVibrator()) return
 
-        when (key.vibrationTypeOrDefault) {
+        // FIXED: Use strength setting to determine vibration intensity
+        val effectiveVibration = if (key.vibrationTypeOrDefault == KeyModel.VibrationType.CUSTOM) {
+            key.vibrationTypeOrDefault
+        } else {
+            // Map strength setting to vibration type
+            when (strength) {
+                KeyboardSettings.VibrationStrength.NONE -> KeyModel.VibrationType.NONE
+                KeyboardSettings.VibrationStrength.LIGHT -> KeyModel.VibrationType.LIGHT
+                KeyboardSettings.VibrationStrength.MEDIUM -> KeyModel.VibrationType.MEDIUM
+                KeyboardSettings.VibrationStrength.STRONG -> KeyModel.VibrationType.STRONG
+            }
+        }
+
+        when (effectiveVibration) {
             KeyModel.VibrationType.NONE -> return
             KeyModel.VibrationType.LIGHT -> performLightVibration()
             KeyModel.VibrationType.MEDIUM -> performMediumVibration()
@@ -51,24 +64,23 @@ class HapticEngine(private val context: Context) {
 
     private fun performMediumVibration() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createOneShot(20, VibrationEffect.DEFAULT_AMPLITUDE))
+            vibrator.vibrate(VibrationEffect.createOneShot(25, VibrationEffect.DEFAULT_AMPLITUDE))
         } else {
             @Suppress("DEPRECATION")
-            vibrator.vibrate(20)
+            vibrator.vibrate(25)
         }
     }
 
     private fun performStrongVibration() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createOneShot(40, VibrationEffect.DEFAULT_AMPLITUDE))
+            vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
         } else {
             @Suppress("DEPRECATION")
-            vibrator.vibrate(40)
+            vibrator.vibrate(50)
         }
     }
 
     private fun performCustomVibration() {
-        // Custom vibration pattern
         val pattern = longArrayOf(0, 15, 5, 10)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
@@ -78,16 +90,10 @@ class HapticEngine(private val context: Context) {
         }
     }
 
-    /**
-     * Update settings.
-     */
     fun updateSettings(settings: KeyboardSettings) {
         enabled = settings.vibrationEnabled
         strength = settings.vibrationStrength
     }
 
-    /**
-     * Check if vibrator is available.
-     */
     fun hasVibrator(): Boolean = vibrator.hasVibrator()
 }
