@@ -3,6 +3,8 @@ package com.keys.cafe.keyboard.util
 import android.util.Log
 import kotlin.system.measureNanoTime
 
+private const val PERF_TAG = "KeysCafePerf"
+
 /**
  * Performance monitoring utility.
  *
@@ -16,8 +18,6 @@ import kotlin.system.measureNanoTime
 class PerformanceMonitor {
 
     companion object {
-        internal const val TAG = "KeysCafePerf"
-
         // Performance thresholds
         const val MAX_OPEN_TIME_MS = 50L
         const val MAX_TOUCH_RESPONSE_MS = 10L
@@ -35,9 +35,9 @@ class PerformanceMonitor {
     inline fun measureOpenTime(block: () -> Unit): Long {
         val timeMs = measureNanoTime(block) / 1_000_000
         if (timeMs > MAX_OPEN_TIME_MS) {
-            Log.w(TAG, "Keyboard open time exceeded: ${timeMs}ms (max: ${MAX_OPEN_TIME_MS}ms)")
+            Log.w(PERF_TAG, "Keyboard open time exceeded: ${timeMs}ms (max: ${MAX_OPEN_TIME_MS}ms)")
         } else {
-            Log.d(TAG, "Keyboard open time: ${timeMs}ms")
+            Log.d(PERF_TAG, "Keyboard open time: ${timeMs}ms")
         }
         return timeMs
     }
@@ -48,7 +48,7 @@ class PerformanceMonitor {
     inline fun measureTouchResponse(block: () -> Unit): Long {
         val timeMs = measureNanoTime(block) / 1_000_000
         if (timeMs > MAX_TOUCH_RESPONSE_MS) {
-            Log.w(TAG, "Touch response exceeded: ${timeMs}ms (max: ${MAX_TOUCH_RESPONSE_MS}ms)")
+            Log.w(PERF_TAG, "Touch response exceeded: ${timeMs}ms (max: ${MAX_TOUCH_RESPONSE_MS}ms)")
         }
         return timeMs
     }
@@ -66,7 +66,7 @@ class PerformanceMonitor {
             lastFrameTime = currentTime
 
             if (currentFps < TARGET_FPS - 5) {
-                Log.w(TAG, "Frame rate dropped: $currentFps FPS (target: $TARGET_FPS)")
+                Log.w(PERF_TAG, "Frame rate dropped: $currentFps FPS (target: $TARGET_FPS)")
             }
         }
     }
@@ -79,7 +79,7 @@ class PerformanceMonitor {
         val usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024)
 
         if (usedMemory > MAX_MEMORY_MB) {
-            Log.w(TAG, "Memory usage high: ${usedMemory}MB (max: ${MAX_MEMORY_MB}MB)")
+            Log.w(PERF_TAG, "Memory usage high: ${usedMemory}MB (max: ${MAX_MEMORY_MB}MB)")
         }
         return usedMemory
     }

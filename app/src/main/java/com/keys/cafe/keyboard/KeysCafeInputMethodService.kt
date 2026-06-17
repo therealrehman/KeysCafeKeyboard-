@@ -7,7 +7,6 @@ import android.view.inputmethod.EditorInfo
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.platform.LocalViewModelStoreOwner
 import androidx.lifecycle.*
 import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
@@ -50,8 +49,7 @@ class KeysCafeInputMethodService : InputMethodService(),
         composeView = ComposeView(this).apply {
             setContent {
                 CompositionLocalProvider(
-                    LocalLifecycleOwner provides this@KeysCafeInputMethodService,
-                    LocalViewModelStoreOwner provides this@KeysCafeInputMethodService
+                    LocalLifecycleOwner provides this@KeysCafeInputMethodService
                 ) {
                     var settings by remember { mutableStateOf(currentSettings) }
                     LaunchedEffect(Unit) {
