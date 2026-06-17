@@ -3,7 +3,7 @@ package com.keys.cafe.keyboard.util
 import android.util.Log
 import kotlin.system.measureNanoTime
 
-private const val PERF_TAG = "KeysCafePerf"
+internal const val PERF_TAG = "KeysCafePerf"
 
 /**
  * Performance monitoring utility.
