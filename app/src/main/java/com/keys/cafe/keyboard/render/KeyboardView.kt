@@ -3,11 +3,14 @@ package com.keys.cafe.keyboard.render
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.keys.cafe.keyboard.haptic.HapticEngine
 import com.keys.cafe.keyboard.layout.LayoutManager
 import com.keys.cafe.keyboard.model.*
@@ -85,7 +88,7 @@ fun KeyboardView(
                 .background(Color.Black),
             contentAlignment = Alignment.Center
         ) {
-            Text("Loading KeysCafe Keyboard...", color = Color(0xFFFFAA00))
+            Text("Loading KeysCafe Keyboard...", color = Color(0xFFFFAA00), fontSize = 16.sp)
         }
         return
     }
