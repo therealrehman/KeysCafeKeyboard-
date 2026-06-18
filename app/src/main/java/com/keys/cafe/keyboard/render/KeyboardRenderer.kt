@@ -1,12 +1,7 @@
 package com.keys.cafe.keyboard.render
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -28,13 +23,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.keys.cafe.keyboard.model.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
- * SUPER DEFENSIVE: KeyboardRenderer
- * - try-catch on every key render
- * - Fallback colors if theme is null
- * - Safe key width calculation
- * - No crash guaranteed
+ * FIXED KeyboardRenderer
+ * - Keys properly sized and spread across full width
+ * - Keyboard at BOTTOM of screen
+ * - Fire glow at bottom
+ * - White→Cyan→Pink→Orange animation
  */
 @Composable
 fun KeyboardRenderer(
@@ -46,12 +43,11 @@ fun KeyboardRenderer(
     onKeyRelease: (KeyModel) -> Unit,
     onTouchEvent: (TouchEvent) -> Unit
 ) {
-    // DEFENSIVE: If layout or theme is null, show nothing (don't crash)
     if (layout == null || theme == null) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
+                .height(280.dp)
                 .background(Color.Black),
             contentAlignment = Alignment.Center
         ) {
@@ -61,61 +57,87 @@ fun KeyboardRenderer(
     }
 
     val colors = theme.toComposeColors()
+    val density = LocalDensity.current
     val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp
+    val screenWidthPx = with(density) { configuration.screenWidthDp.dp.toPx() }
 
-    // Calculate key sizes
     val baseKeyHeight = when (settings.keySize) {
-        KeyboardSettings.KeySize.SMALL -> 36.dp
-        KeyboardSettings.KeySize.MEDIUM -> 44.dp
-        KeyboardSettings.KeySize.LARGE -> 52.dp
-        KeyboardSettings.KeySize.EXTRA_LARGE -> 60.dp
+        KeyboardSettings.KeySize.SMALL -> 40.dp
+        KeyboardSettings.KeySize.MEDIUM -> 48.dp
+        KeyboardSettings.KeySize.LARGE -> 56.dp
+        KeyboardSettings.KeySize.EXTRA_LARGE -> 64.dp
     }
 
     val sizeMultiplier = settings.keySizePercent / 100f
     val keyHeight = (baseKeyHeight.value * sizeMultiplier).dp
-    val numberRowHeight = (baseKeyHeight.value * sizeMultiplier * 0.85).dp
+    val numberRowHeight = (baseKeyHeight.value * sizeMultiplier * 0.88f).dp
 
+    val horizontalGap = 5.dp
+    val verticalGap = 6.dp
+    val sidePadding = 4.dp
+
+    // FIXED: Column that fills screen and pushes keyboard to bottom
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(colors.background)
-            .padding(
-                start = layout.paddingStartOrDefault.dp,
-                end = layout.paddingEndOrDefault.dp,
-                top = layout.paddingTopOrDefault.dp,
-                bottom = layout.paddingBottomOrDefault.dp
-            ),
-        verticalArrangement = Arrangement.spacedBy(layout.verticalGapOrDefault.dp)
+            .wrapContentHeight()
+            .background(Color.Black)
     ) {
-        layout.rows.forEachIndexed { rowIndex, row ->
-            val rowHeight = if (rowIndex == 0) numberRowHeight else keyHeight
-            val indentPadding = row.indentOrDefault.dp
+        // Top spacer pushes keyboard down
+        // (In real IME, the system handles positioning, we just render the keyboard)
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = indentPadding),
-                horizontalArrangement = Arrangement.spacedBy(layout.horizontalGapOrDefault.dp)
+        // Keyboard container
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(colors.background)
+                .padding(horizontal = sidePadding, vertical = 8.dp)
+        ) {
+            // Fire glow background
+            if (theme.glowEnabled && settings.glowEnabled) {
+                FireGlowEffect()
+            }
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(verticalGap)
             ) {
-                row.keys.forEach { key ->
+                layout.rows.forEachIndexed { rowIndex, row ->
                     val isNumberRow = rowIndex == 0
-                    val keyWidth = calculateKeyWidthSafe(key, row, screenWidth, layout, layout.horizontalGapOrDefault.dp)
+                    val rowH = if (isNumberRow) numberRowHeight else keyHeight
 
-                    // DEFENSIVE: Wrap each key in try-catch
-                    KeyButtonSafe(
-                        key = key,
-                        theme = colors,
-                        settings = settings,
-                        shiftState = shiftState,
-                        width = keyWidth,
-                        height = if (isNumberRow) numberRowHeight else keyHeight,
-                        glowEnabled = theme.glowEnabled && settings.glowEnabled,
-                        onPress = { onKeyPress(key) },
-                        onRelease = { onKeyRelease(key) },
-                        onTap = { onTouchEvent(TouchEvent.SingleTap(key)) },
-                        onLongPress = { onTouchEvent(TouchEvent.LongPress(key)) }
-                    )
+                    // Calculate total weight for this row
+                    val totalWeight = row.keys.sumOf { it.weight.toDouble() }.toFloat()
+                    val gapCount = maxOf(0, row.keys.size - 1)
+                    val totalGapWidth = with(density) { (gapCount * horizontalGap).toPx() }
+                    val availableWidth = screenWidthPx - with(density) { (sidePadding * 2).toPx() } - totalGapWidth
+                    val unitWidth = availableWidth / totalWeight
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = row.indentOrDefault.dp),
+                        horizontalArrangement = Arrangement.spacedBy(horizontalGap)
+                    ) {
+                        row.keys.forEach { key ->
+                            val keyWidthPx = unitWidth * key.weight
+                            val keyWidth = with(density) { keyWidthPx.toDp() }
+
+                            KeyButton(
+                                key = key,
+                                theme = colors,
+                                settings = settings,
+                                shiftState = shiftState,
+                                width = keyWidth,
+                                height = rowH,
+                                glowEnabled = theme.glowEnabled && settings.glowEnabled,
+                                onPress = { onKeyPress(key) },
+                                onRelease = { onKeyRelease(key) },
+                                onTap = { onTouchEvent(TouchEvent.SingleTap(key)) },
+                                onLongPress = { onTouchEvent(TouchEvent.LongPress(key)) }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -123,7 +145,7 @@ fun KeyboardRenderer(
 }
 
 @Composable
-private fun KeyButtonSafe(
+private fun KeyButton(
     key: KeyModel,
     theme: ThemeColors,
     settings: KeyboardSettings,
@@ -137,38 +159,39 @@ private fun KeyButtonSafe(
     onLongPress: () -> Unit
 ) {
     var isPressed by remember { mutableStateOf(false) }
-    var isLongPressed by remember { mutableStateOf(false) }
-    var showGlow by remember { mutableStateOf(false) }
+    var animStep by remember { mutableStateOf(-1) }
+    val scope = rememberCoroutineScope()
+
+    // Animation colors: White → Cyan → Pink → Orange
+    val animColors = listOf(
+        Color(0xFFFFFFFF),  // White
+        Color(0xFF00FFFF),  // Cyan
+        Color(0xFFFF00AA),  // Pink
+        Color(0xFFFF6400)   // Orange
+    )
+
+    val currentBg = if (animStep >= 0) animColors[animStep] else theme.key
+    val currentText = if (animStep in 0..1) Color.Black else if (animStep in 2..3) Color.White else theme.keyText
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.92f else 1.0f,
-        animationSpec = tween(
-            durationMillis = if (settings.animationEnabled) 70 else 0,
-            easing = FastOutSlowInEasing
-        ),
+        targetValue = if (isPressed) 0.93f else 1.0f,
+        animationSpec = tween(durationMillis = 60, easing = FastOutSlowInEasing),
         label = "scale"
     )
 
-    val alpha by animateFloatAsState(
-        targetValue = if (isPressed) 1.0f else 0.82f,
-        animationSpec = tween(
-            durationMillis = if (settings.animationEnabled) 100 else 0
-        ),
-        label = "alpha"
+    val bgColor by animateColorAsState(
+        targetValue = currentBg,
+        animationSpec = tween(durationMillis = 50),
+        label = "bg"
     )
 
-    val pressColor by animateColorAsState(
-        targetValue = when {
-            isLongPressed -> Color(0xFFFF6400)
-            isPressed -> theme.keyPressed
-            else -> theme.key
-        },
-        animationSpec = tween(
-            durationMillis = if (settings.animationEnabled) 100 else 0
-        ),
-        label = "pressColor"
+    val textColor by animateColorAsState(
+        targetValue = currentText,
+        animationSpec = tween(durationMillis = 50),
+        label = "text"
     )
 
+    // Glow color
     val glowColor = try {
         when (key.glowColorOrDefault) {
             KeyModel.GlowColor.RED -> Color(0xFFFF3333)
@@ -182,9 +205,7 @@ private fun KeyButtonSafe(
             KeyModel.GlowColor.WHITE -> Color.White
             else -> Color(0xFFFFAA00)
         }
-    } catch (e: Exception) {
-        Color(0xFFFFAA00)
-    }
+    } catch (e: Exception) { Color(0xFFFFAA00) }
 
     val displayLabel = try {
         when {
@@ -199,20 +220,22 @@ private fun KeyButtonSafe(
             key.id.length == 1 && key.id.matches(Regex("[a-z]")) -> {
                 when (shiftState) {
                     ShiftState.OFF -> key.label.lowercase()
-                    ShiftState.SINGLE -> key.label.uppercase()
-                    ShiftState.CAPS_LOCK -> key.label.uppercase()
+                    else -> key.label.uppercase()
                 }
             }
             else -> key.label
         }
-    } catch (e: Exception) {
-        key.id
-    }
+    } catch (e: Exception) { key.id }
 
-    val shiftBackgroundColor = if (key.id == "shift" && shiftState != ShiftState.OFF) {
-        theme.keyPressed
-    } else {
-        pressColor
+    fun startAnimation() {
+        if (!settings.animationEnabled) return
+        scope.launch {
+            animStep = 0; delay(70)
+            animStep = 1; delay(70)
+            animStep = 2; delay(70)
+            animStep = 3; delay(180)
+            animStep = -1
+        }
     }
 
     Box(
@@ -220,68 +243,53 @@ private fun KeyButtonSafe(
             .width(width)
             .height(height)
             .scale(scale)
-            .alpha(alpha)
             .shadow(
-                elevation = if (isPressed) 8.dp else 2.dp,
+                elevation = if (isPressed && glowEnabled) 8.dp else 1.dp,
                 shape = RoundedCornerShape(8.dp),
-                ambientColor = if (glowEnabled && showGlow) glowColor else Color.Transparent,
-                spotColor = if (glowEnabled && showGlow) glowColor else Color.Transparent
+                ambientColor = if (glowEnabled) glowColor else Color.Transparent,
+                spotColor = if (glowEnabled) glowColor else Color.Transparent
             )
-            .background(
-                color = shiftBackgroundColor,
-                shape = RoundedCornerShape(8.dp)
-            )
+            .background(bgColor, RoundedCornerShape(8.dp))
             .pointerInput(key.id) {
                 detectTapGestures(
                     onPress = {
                         isPressed = true
-                        showGlow = true
                         onPress()
+                        startAnimation()
                         tryAwaitRelease()
                         isPressed = false
-                        isLongPressed = false
-                        showGlow = false
                         onRelease()
                     },
                     onTap = { onTap() },
-                    onLongPress = {
-                        isLongPressed = true
-                        onLongPress()
-                    }
+                    onLongPress = { onLongPress() }
                 )
             },
         contentAlignment = Alignment.Center
     ) {
-        if (glowEnabled && showGlow) {
+        // Inner glow when pressed
+        if (isPressed && glowEnabled) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                glowColor.copy(alpha = 0.8f),
                                 glowColor.copy(alpha = 0.5f),
                                 glowColor.copy(alpha = 0.2f),
                                 Color.Transparent
                             ),
                             center = Offset(0.5f, 0.5f),
-                            radius = 2.0f
+                            radius = 0.8f
                         ),
                         shape = RoundedCornerShape(8.dp)
                     )
             )
         }
 
-        val textColor = when {
-            key.id == "shift" && shiftState != ShiftState.OFF -> theme.keyPressedText
-            isPressed -> theme.keyPressedText
-            else -> theme.keyText
-        }
-
         Text(
             text = displayLabel,
             color = textColor,
-            fontSize = if (key.id.length == 1 && key.id.matches(Regex("[a-z0-9]"))) 16.sp else 14.sp,
+            fontSize = if (key.id.length == 1 && key.id.matches(Regex("[a-z0-9]"))) 17.sp else 13.sp,
             fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
             textAlign = TextAlign.Center,
             maxLines = 1
@@ -290,20 +298,23 @@ private fun KeyButtonSafe(
 }
 
 @Composable
-private fun calculateKeyWidthSafe(
-    key: KeyModel,
-    row: RowModel,
-    screenWidth: androidx.compose.ui.unit.Dp,
-    layout: LayoutModel,
-    gap: androidx.compose.ui.unit.Dp
-): androidx.compose.ui.unit.Dp {
-    return try {
-        val totalWeight = row.keys.sumOf { it.weight.toDouble() }.toFloat()
-        val totalGap = gap * (row.keys.size - 1)
-        val availableWidth = screenWidth - (layout.paddingStartOrDefault + layout.paddingEndOrDefault).dp - totalGap
-        val baseWidth = availableWidth / totalWeight
-        (baseWidth * key.weight).coerceAtLeast(28.dp)
-    } catch (e: Exception) {
-        48.dp // Fallback width
-    }
+private fun FireGlowEffect() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(100.dp)
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.Transparent,
+                        Color(0xFFFF5000).copy(alpha = 0.15f),
+                        Color(0xFFFF8C00).copy(alpha = 0.3f),
+                        Color(0xFFFFA500).copy(alpha = 0.2f),
+                        Color(0xFFFFC800).copy(alpha = 0.1f)
+                    ),
+                    startY = 0f,
+                    endY = Float.POSITIVE_INFINITY
+                )
+            )
+    )
 }
