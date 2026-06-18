@@ -12,6 +12,7 @@ import androidx.lifecycle.*
 import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.keys.cafe.keyboard.data.SettingsRepository
 import com.keys.cafe.keyboard.model.KeyboardSettings
 import com.keys.cafe.keyboard.render.KeyboardView
@@ -60,7 +61,31 @@ class KeysCafeInputMethodService : InputMethodService(),
             lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
             lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
 
+            // *** ROOT CAUSE FIX ***
+            // Compose needs a ViewTreeLifecycleOwner / ViewTreeViewModelStoreOwner /
+            // ViewTreeSavedStateRegistryOwner on the View tree the MOMENT the
+            // ComposeView attaches to the IME window (which happens right after this
+            // function returns — outside this try/catch). The
+            // CompositionLocalProvider(LocalLifecycleOwner ...) further below does NOT
+            // provide this; it only sets a composition-local value, and composition
+            // hasn't started yet at attach-time, so Compose can't see it. Without the
+            // calls below, attaching throws "ViewTreeLifecycleOwner not found" /
+            // "Composed into the View which doesn't propagate ViewTreeLifecycleOwner!".
+            // The service itself stays alive (so the keyboard still shows up fine in
+            // the IME picker and can be "switched" to), but the input view crashes
+            // silently right as it's about to be shown — so nothing ever appears when
+            // you tap a text field.
+            window?.window?.decorView?.let { decorView ->
+                decorView.setViewTreeLifecycleOwner(this)
+                decorView.setViewTreeViewModelStoreOwner(this)
+                decorView.setViewTreeSavedStateRegistryOwner(this)
+            }
+
             val newComposeView = ComposeView(this).apply {
+                setViewTreeLifecycleOwner(this@KeysCafeInputMethodService)
+                setViewTreeViewModelStoreOwner(this@KeysCafeInputMethodService)
+                setViewTreeSavedStateRegistryOwner(this@KeysCafeInputMethodService)
+
                 setContent {
                     CompositionLocalProvider(
                         LocalLifecycleOwner provides this@KeysCafeInputMethodService
