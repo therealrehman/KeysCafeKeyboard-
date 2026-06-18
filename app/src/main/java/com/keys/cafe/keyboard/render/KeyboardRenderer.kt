@@ -26,13 +26,6 @@ import com.keys.cafe.keyboard.model.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/**
- * FIXED KeyboardRenderer
- * - Keys properly sized and spread across full width
- * - Keyboard at BOTTOM of screen
- * - Fire glow at bottom
- * - White→Cyan→Pink→Orange animation
- */
 @Composable
 fun KeyboardRenderer(
     layout: LayoutModel?,
@@ -59,41 +52,43 @@ fun KeyboardRenderer(
     val colors = theme.toComposeColors()
     val density = LocalDensity.current
     val configuration = LocalConfiguration.current
-    val screenWidthPx = with(density) { configuration.screenWidthDp.dp.toPx() }
+    val screenWidthDp = configuration.screenWidthDp
 
     val baseKeyHeight = when (settings.keySize) {
-        KeyboardSettings.KeySize.SMALL -> 40.dp
-        KeyboardSettings.KeySize.MEDIUM -> 48.dp
-        KeyboardSettings.KeySize.LARGE -> 56.dp
-        KeyboardSettings.KeySize.EXTRA_LARGE -> 64.dp
+        KeyboardSettings.KeySize.SMALL -> 40
+        KeyboardSettings.KeySize.MEDIUM -> 48
+        KeyboardSettings.KeySize.LARGE -> 56
+        KeyboardSettings.KeySize.EXTRA_LARGE -> 64
     }
 
     val sizeMultiplier = settings.keySizePercent / 100f
-    val keyHeight = (baseKeyHeight.value * sizeMultiplier).dp
-    val numberRowHeight = (baseKeyHeight.value * sizeMultiplier * 0.88f).dp
+    val keyHeightVal = (baseKeyHeight * sizeMultiplier).toInt()
+    val numberRowHeightVal = (baseKeyHeight * sizeMultiplier * 0.88f).toInt()
 
+    val keyHeight = keyHeightVal.dp
+    val numberRowHeight = numberRowHeightVal.dp
     val horizontalGap = 5.dp
     val verticalGap = 6.dp
     val sidePadding = 4.dp
 
-    // FIXED: Column that fills screen and pushes keyboard to bottom
+    // Calculate available width in pixels
+    val sidePaddingPx = with(density) { sidePadding.toPx() }
+    val gapPx = with(density) { horizontalGap.toPx() }
+    val screenWidthPx = with(density) { screenWidthDp.dp.toPx() }
+    val availableWidthPx = screenWidthPx - (sidePaddingPx * 2f)
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
             .background(Color.Black)
     ) {
-        // Top spacer pushes keyboard down
-        // (In real IME, the system handles positioning, we just render the keyboard)
-
-        // Keyboard container
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(colors.background)
                 .padding(horizontal = sidePadding, vertical = 8.dp)
         ) {
-            // Fire glow background
             if (theme.glowEnabled && settings.glowEnabled) {
                 FireGlowEffect()
             }
@@ -106,12 +101,11 @@ fun KeyboardRenderer(
                     val isNumberRow = rowIndex == 0
                     val rowH = if (isNumberRow) numberRowHeight else keyHeight
 
-                    // Calculate total weight for this row
                     val totalWeight = row.keys.sumOf { it.weight.toDouble() }.toFloat()
                     val gapCount = maxOf(0, row.keys.size - 1)
-                    val totalGapWidth = with(density) { (gapCount * horizontalGap).toPx() }
-                    val availableWidth = screenWidthPx - with(density) { (sidePadding * 2).toPx() } - totalGapWidth
-                    val unitWidth = availableWidth / totalWeight
+                    val totalGapWidth = gapCount * gapPx
+                    val rowAvailableWidth = availableWidthPx - totalGapWidth
+                    val unitWidthPx = rowAvailableWidth / totalWeight
 
                     Row(
                         modifier = Modifier
@@ -120,7 +114,7 @@ fun KeyboardRenderer(
                         horizontalArrangement = Arrangement.spacedBy(horizontalGap)
                     ) {
                         row.keys.forEach { key ->
-                            val keyWidthPx = unitWidth * key.weight
+                            val keyWidthPx = unitWidthPx * key.weight
                             val keyWidth = with(density) { keyWidthPx.toDp() }
 
                             KeyButton(
@@ -162,12 +156,11 @@ private fun KeyButton(
     var animStep by remember { mutableStateOf(-1) }
     val scope = rememberCoroutineScope()
 
-    // Animation colors: White → Cyan → Pink → Orange
     val animColors = listOf(
-        Color(0xFFFFFFFF),  // White
-        Color(0xFF00FFFF),  // Cyan
-        Color(0xFFFF00AA),  // Pink
-        Color(0xFFFF6400)   // Orange
+        Color(0xFFFFFFFF),
+        Color(0xFF00FFFF),
+        Color(0xFFFF00AA),
+        Color(0xFFFF6400)
     )
 
     val currentBg = if (animStep >= 0) animColors[animStep] else theme.key
@@ -191,7 +184,6 @@ private fun KeyButton(
         label = "text"
     )
 
-    // Glow color
     val glowColor = try {
         when (key.glowColorOrDefault) {
             KeyModel.GlowColor.RED -> Color(0xFFFF3333)
@@ -266,7 +258,6 @@ private fun KeyButton(
             },
         contentAlignment = Alignment.Center
     ) {
-        // Inner glow when pressed
         if (isPressed && glowEnabled) {
             Box(
                 modifier = Modifier
